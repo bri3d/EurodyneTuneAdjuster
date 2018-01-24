@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">TuneAdjuster</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="boost_title">Boost</string>
+    <string name="octane_title">Octane</string>
+    <string name="pick_bluetooth">Pick your Bluetooth OBDII</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="connect">Connect</string>
+    <string name="save">Save</string>
+</resources>
