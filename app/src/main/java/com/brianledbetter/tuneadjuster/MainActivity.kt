@@ -10,7 +10,6 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.os.Handler
 import android.os.Message
-import android.support.v4.content.LocalBroadcastManager
 import android.widget.CompoundButton
 import com.brianledbetter.tuneadjuster.elm327.BluetoothThread
 import com.brianledbetter.tuneadjuster.elm327.EurodyneIO
@@ -26,6 +25,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
 
     private var boostValue = 0
     private var octaneValue = 0
+
     private var bluetoothThread : BluetoothThread? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     }
 
     fun startConnection() {
+        statusLabel.text = resources.getString(R.string.connecting)
         val b = BluetoothAdapter.getDefaultAdapter()
 
         if (!b.isEnabled) {
@@ -75,6 +76,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     }
 
     fun saveBoostAndOctane() {
+        statusLabel.text = resources.getString(R.string.saving)
         val saveIntent = Intent("SaveBoostAndOctane")
         saveIntent.putExtra("BoostInfo", EurodyneIO.BoostInfo(0,0, boostValue))
         saveIntent.putExtra("OctaneInfo", EurodyneIO.OctaneInfo(0, 0, octaneValue))
@@ -85,15 +87,23 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
 
     fun handleMessage(message: Message) {
         val intent = message.obj as? Intent
-        val octaneData = intent?.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")
-        val boostData = intent?.getParcelableExtra<EurodyneIO.BoostInfo>("boostInfo")
-        if (octaneData != null && boostData != null) {
-            fieldOneFragment = AdjustFieldFragment.newInstance(octaneData.minimum, octaneData.maximum, octaneData.current, "Octane")
-            fieldTwoFragment = AdjustFieldFragment.newInstance(boostData.minimum, boostData.maximum, boostData.current, "Boost")
-            supportFragmentManager.beginTransaction()
-                    .replace(R.id.fieldOneFragmentContainer, fieldOneFragment, "fieldOne")
-                    .replace(R.id.fieldTwoFragmentContainer, fieldTwoFragment, "fieldTwo")
-                    .commit()
+        if (intent?.action == "SocketClosed") {
+            statusLabel.text = resources.getString(R.string.not_connected)
+            connectionSwitch.isChecked = false
+        } else {
+            val octaneData = intent?.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")
+            val boostData = intent?.getParcelableExtra<EurodyneIO.BoostInfo>("boostInfo")
+            if (octaneData != null && boostData != null) {
+                statusLabel.text = resources.getString(R.string.got_data)
+                fieldOneFragment = AdjustFieldFragment.newInstance(octaneData.minimum, octaneData.maximum, octaneData.current, "Octane")
+                fieldTwoFragment = AdjustFieldFragment.newInstance(boostData.minimum, boostData.maximum, boostData.current, "Boost")
+                boostValue = boostData.current
+                octaneValue = octaneData.current
+                supportFragmentManager.beginTransaction()
+                        .replace(R.id.fieldOneFragmentContainer, fieldOneFragment, "fieldOne")
+                        .replace(R.id.fieldTwoFragmentContainer, fieldTwoFragment, "fieldTwo")
+                        .commit()
+            }
         }
     }
 

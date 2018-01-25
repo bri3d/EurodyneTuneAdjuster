@@ -17,13 +17,15 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainHan
     val handler : Handler = Handler({ message ->
         val intent = message.obj as? Intent
         if (intent?.action == "SaveBoostAndOctane") {
-            val boost : EurodyneIO.BoostInfo = intent.getParcelableExtra("BoostInfo")
-            val octane : EurodyneIO.OctaneInfo = intent.getParcelableExtra("OctaneInfo")
-            val edIo = EurodyneIO()
-            val elmIO = elmIO!!
-            edIo.setBoostInfo(elmIO, boost.current)
-            edIo.setOctaneInfo(elmIO, octane.current)
-            fetchInfo(elmIO)
+            if (elmIO != null) {
+                val boost: EurodyneIO.BoostInfo = intent.getParcelableExtra("BoostInfo")
+                val octane: EurodyneIO.OctaneInfo = intent.getParcelableExtra("OctaneInfo")
+                val edIo = EurodyneIO()
+                val elmIO = elmIO!!
+                edIo.setBoostInfo(elmIO, boost.current)
+                edIo.setOctaneInfo(elmIO, octane.current)
+                fetchInfo(elmIO)
+            }
         }
         if (intent?.action == "StopConnection") {
             cancel()
@@ -48,11 +50,10 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainHan
             mmSocket!!.connect()
         } catch (connectException: IOException) {
             try {
-                mmSocket!!.close()
+                cancel()
             } catch (closeException: IOException) {
                 Log.e(TAG, "Could not close the client socket", closeException)
             }
-
             return
         }
 
@@ -66,6 +67,14 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainHan
         while(!Thread.interrupted()) {
             Thread.yield()
         }
+        cancel()
+    }
+
+    fun sendClosed() {
+        val closeMessage = handler.obtainMessage()
+        val intent = Intent("SocketClosed")
+        closeMessage.obj = intent
+        mainHandler.sendMessage(closeMessage)
     }
 
     fun fetchInfo(elmIO : ElmIO) {
@@ -86,6 +95,7 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainHan
         try {
             elmIO?.stop()
             mmSocket!!.close()
+            sendClosed()
             interrupt()
         } catch (e: IOException) {
             Log.e(TAG, "Could not close the client socket", e)
