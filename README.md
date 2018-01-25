@@ -19,6 +19,5 @@ Start the app and flip the Connect toggle in the lower left. Turn your ignition 
 
 # Todo
 
-Write settings. Easy, just not done yet.
-Error handling - on any unexpected response we should just pop a dialog and kill the connection thread.
-
+* Error handling - on any unexpected response we should just pop a dialog and kill the connection thread.
+* Unexplained occasional issues with writing values. Possibly a race condition or possibly related to ECU retries / speed. Could be fixed by properly implementing UDS to accept retry messages from the server/ECU, or could be fixed using Thread.sleep depending on how lazy we want to be.
