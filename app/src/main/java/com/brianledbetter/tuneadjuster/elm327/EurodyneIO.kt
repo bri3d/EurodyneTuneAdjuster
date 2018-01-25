@@ -3,6 +3,7 @@ package com.brianledbetter.tuneadjuster.elm327
 import android.os.Parcel
 import android.os.Parcelable
 import unsigned.Ubyte
+import unsigned.toUInt
 import unsigned.toUbyte
 
 
@@ -72,7 +73,7 @@ class EurodyneIO {
         var currentOctane = 0
         var operationReturned = false
         io.ioReactor.messageHandler = {bytes ->
-            minOctane = bytes[3].toInt()
+            minOctane = bytes[3].toUInt()
             operationReturned = true
             true
         }
@@ -80,7 +81,7 @@ class EurodyneIO {
         while (!operationReturned) Thread.yield()
         operationReturned = false
         io.ioReactor.messageHandler = {bytes ->
-            maxOctane = bytes[3].toInt()
+            maxOctane = bytes[3].toUInt()
             operationReturned = true
             true
         }
@@ -88,7 +89,7 @@ class EurodyneIO {
         while (!operationReturned) Thread.yield()
         operationReturned = false
         io.ioReactor.messageHandler = {bytes ->
-            currentOctane = bytes[3].toInt()
+            currentOctane = bytes[3].toUInt()
             operationReturned = true
             true
         }
@@ -143,7 +144,7 @@ class EurodyneIO {
     }
 
     fun setOctaneInfo(io : ElmIO, octane : Int) {
-        val octaneByteString = String.format("%02x", octane.toByte())
+        val octaneByteString = String.format("%02x", octane.toUbyte().toByte())
                 var operationReturned = false
         io.ioReactor.messageHandler = {_ ->
             operationReturned = true

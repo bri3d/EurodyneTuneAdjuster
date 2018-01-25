@@ -88,10 +88,8 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
         val octaneData = intent?.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")
         val boostData = intent?.getParcelableExtra<EurodyneIO.BoostInfo>("boostInfo")
         if (octaneData != null && boostData != null) {
-            fieldOneFragment = AdjustFieldFragment.newInstance(octaneData.minimum, octaneData.maximum, "Octane")
-            fieldTwoFragment = AdjustFieldFragment.newInstance(boostData.minimum, boostData.maximum, "Boost")
-            fieldOneFragment?.setValueFromData(octaneData.current)
-            fieldTwoFragment?.setValueFromData(boostData.current)
+            fieldOneFragment = AdjustFieldFragment.newInstance(octaneData.minimum, octaneData.maximum, octaneData.current, "Octane")
+            fieldTwoFragment = AdjustFieldFragment.newInstance(boostData.minimum, boostData.maximum, boostData.current, "Boost")
             supportFragmentManager.beginTransaction()
                     .replace(R.id.fieldOneFragmentContainer, fieldOneFragment, "fieldOne")
                     .replace(R.id.fieldTwoFragmentContainer, fieldTwoFragment, "fieldTwo")

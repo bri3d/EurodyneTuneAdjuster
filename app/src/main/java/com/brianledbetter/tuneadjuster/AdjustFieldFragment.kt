@@ -14,7 +14,7 @@ class AdjustFieldFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
 
     private var minValue: Int? = null
     private var maxValue: Int? = null
-    private var value: Int? = null
+    private var originalValue: Int? = null
     private var title: String? = null
 
     private var mListener: OnParameterAdjustedListener? = null
@@ -24,6 +24,7 @@ class AdjustFieldFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
         if (arguments != null) {
             minValue = arguments.getInt(ARG_MIN_VALUE)
             maxValue = arguments.getInt(ARG_MAX_VALUE)
+            originalValue = arguments.getInt(ARG_ORIGINAL_VALUE)
             title = arguments.getString(ARG_TITLE)
         }
     }
@@ -42,7 +43,7 @@ class AdjustFieldFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
         this.minValueLabel.text = minValue.toString()
         this.maxValueLabel.text = maxValue.toString()
         this.titleLabel.text = title
-        this.valueBar.progress = (value ?: 0) - (minValue ?: 0)
+        this.valueBar.progress = (originalValue ?: 0) - (minValue ?: 0)
         this.rawValue.text = (this.valueBar.progress + (minValue ?: 0)).toString()
     }
 
@@ -61,15 +62,15 @@ class AdjustFieldFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
     }
 
     override fun onProgressChanged(p0: SeekBar?, value: Int, p2: Boolean) {
-        this.rawValue?.text = (value + (minValue?: 0)).toString()
-        this.rawValue?.setTextColor(Color.RED)
-        mListener?.onParameterAdjusted(title ?: "", value)
+        val realValue = (value + (minValue?: 0))
+        this.rawValue?.text = realValue.toString()
+        if (realValue != originalValue) this.rawValue?.setTextColor(Color.RED)
+        mListener?.onParameterAdjusted(title ?: "", realValue)
     }
 
     fun setValueFromData(value: Int) {
-        this.value = value
         this.rawValue?.text = value.toString()
-        this.valueBar?.progress = value
+        this.valueBar?.progress = value - (minValue ?: 0)
         this.rawValue?.setTextColor(Color.BLACK)
     }
 
@@ -88,13 +89,15 @@ class AdjustFieldFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
     companion object {
         private val ARG_MIN_VALUE = "minValue"
         private val ARG_MAX_VALUE = "maxValue"
+        private val ARG_ORIGINAL_VALUE = "originalValue"
         private val ARG_TITLE = "title"
 
-        fun newInstance(minValue: Int, maxValue: Int, title: String): AdjustFieldFragment {
+        fun newInstance(minValue: Int, maxValue: Int, originalValue: Int, title: String): AdjustFieldFragment {
             val fragment = AdjustFieldFragment()
             val args = Bundle()
             args.putInt(ARG_MIN_VALUE, minValue)
             args.putInt(ARG_MAX_VALUE, maxValue)
+            args.putInt(ARG_ORIGINAL_VALUE, originalValue)
             args.putString(ARG_TITLE, title)
             fragment.arguments = args
             return fragment
