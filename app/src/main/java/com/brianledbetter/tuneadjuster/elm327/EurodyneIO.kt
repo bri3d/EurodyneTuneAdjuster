@@ -76,7 +76,7 @@ class EurodyneIO {
             operationReturned = true
             true
         }
-        io.writeString("22 FD 32")
+        io.writeString("22 FD 32") // ReadLocalIdentifier
         while (!operationReturned) Thread.yield()
         operationReturned = false
         io.ioReactor.messageHandler = {bytes ->
@@ -84,7 +84,7 @@ class EurodyneIO {
             operationReturned = true
             true
         }
-        io.writeString("22 FD 33")
+        io.writeString("22 FD 33") // ReadLocalIdentifier
         while (!operationReturned) Thread.yield()
         operationReturned = false
         io.ioReactor.messageHandler = {bytes ->
@@ -92,7 +92,7 @@ class EurodyneIO {
             operationReturned = true
             true
         }
-        io.writeString("22 F1 F9")
+        io.writeString("22 F1 F9") // ReadLocalIdentifier
         while (!operationReturned) Thread.yield()
         operationReturned = false
         return OctaneInfo(minOctane, maxOctane, currentOctane)
@@ -108,7 +108,7 @@ class EurodyneIO {
             operationReturned = true
             true
         }
-        io.writeString("22 FD 30")
+        io.writeString("22 FD 30") // ReadLocalIdentifier
         while (!operationReturned) Thread.yield()
         operationReturned = false
         io.ioReactor.messageHandler = {bytes ->
@@ -116,7 +116,7 @@ class EurodyneIO {
             operationReturned = true
             true
         }
-        io.writeString("22 FD 31")
+        io.writeString("22 FD 31") // ReadLocalIdentifier
         while (!operationReturned) Thread.yield()
         operationReturned = false
         io.ioReactor.messageHandler = {bytes ->
@@ -124,7 +124,7 @@ class EurodyneIO {
             operationReturned = true
             true
         }
-        io.writeString("22 F1 F8")
+        io.writeString("22 F1 F8") // ReadLocalIdentifier
         while (!operationReturned) Thread.yield()
         operationReturned = false
         return BoostInfo(minBoost, maxBoost, currentBoost)
@@ -138,7 +138,7 @@ class EurodyneIO {
             operationReturned = true
             true
         }
-        io.writeString("2E F1 F8 " + boostByteString)
+        io.writeString("2E F1 F8 " + boostByteString) // WriteLocalIdentifier
         while (!operationReturned) Thread.yield()
     }
 
@@ -149,7 +149,7 @@ class EurodyneIO {
             operationReturned = true
             true
         }
-        io.writeString("2E F1 F9 " + octaneByteString)
+        io.writeString("2E F1 F9 " + octaneByteString) // WriteLocalIdentifier
         while (!operationReturned) Thread.yield()
     }
 

@@ -12,8 +12,7 @@ class ElmIOReactor(private val inStream : InputStream) : Thread() {
     var otherHandler: ((String) -> Boolean)? = null
 
     override fun run() {
-        var exit = false
-        while(!exit) {
+        while(!Thread.interrupted()) {
             val currentLines = readUntilCharacter(Terminal).split("\r")
             // matchers would be sweet here
             currentLines.forEach { currentLine ->

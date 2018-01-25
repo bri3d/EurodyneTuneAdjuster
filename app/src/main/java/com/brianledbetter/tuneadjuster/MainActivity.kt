@@ -9,6 +9,7 @@ import android.os.Parcelable
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.os.Handler
+import android.os.Message
 import android.support.v4.content.LocalBroadcastManager
 import android.widget.CompoundButton
 import com.brianledbetter.tuneadjuster.elm327.BluetoothThread
@@ -17,22 +18,12 @@ import com.brianledbetter.tuneadjuster.elm327.EurodyneIO
 class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjustedListener, BluetoothPickerDialogFragment.BluetoothDialogListener {
     private var fieldOneFragment: AdjustFieldFragment? = null
     private var fieldTwoFragment: AdjustFieldFragment? = null
+
     private var handler: Handler = Handler({ message ->
-        val intent = message.obj as? Intent
-        val octaneData = intent?.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")
-        val boostData = intent?.getParcelableExtra<EurodyneIO.BoostInfo>("boostInfo")
-        if (octaneData != null && boostData != null) {
-            fieldOneFragment = AdjustFieldFragment.newInstance(octaneData.minimum, octaneData.maximum, "Octane")
-            fieldTwoFragment = AdjustFieldFragment.newInstance(boostData.minimum, boostData.maximum, "Boost")
-            fieldOneFragment?.setValueFromData(octaneData.current)
-            fieldTwoFragment?.setValueFromData(boostData.current)
-            supportFragmentManager.beginTransaction()
-                    .replace(R.id.fieldOneFragmentContainer, fieldOneFragment, "fieldOne")
-                    .replace(R.id.fieldTwoFragmentContainer, fieldTwoFragment, "fieldTwo")
-                    .commit()
-        }
+       handleMessage(message)
         true
     })
+
     private var boostValue = 0
     private var octaneValue = 0
     private var bluetoothThread : BluetoothThread? = null
@@ -40,6 +31,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         connectionSwitch.setOnCheckedChangeListener({ _: CompoundButton, isChecked: Boolean ->
             if (isChecked) {
                 startConnection()
@@ -47,13 +39,9 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
                 stopConnection()
             }
         })
+
         button.setOnClickListener({_ ->
-            val saveIntent = Intent("SaveBoostAndOctane")
-            saveIntent.putExtra("BoostInfo", EurodyneIO.BoostInfo(0,0, boostValue))
-            saveIntent.putExtra("OctaneInfo", EurodyneIO.OctaneInfo(0, 0, octaneValue))
-            val saveMessage = bluetoothThread?.handler?.obtainMessage()
-            saveMessage?.obj = saveIntent
-            bluetoothThread?.handler?.sendMessage(saveMessage)
+            saveBoostAndOctane()
         } )
     }
 
@@ -80,6 +68,35 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     }
 
     fun stopConnection() {
+        val stopIntent = Intent("StopConnection")
+        val stopMessage = bluetoothThread?.handler?.obtainMessage()
+        stopMessage?.obj = stopIntent
+        bluetoothThread?.handler?.sendMessage(stopMessage)
+    }
+
+    fun saveBoostAndOctane() {
+        val saveIntent = Intent("SaveBoostAndOctane")
+        saveIntent.putExtra("BoostInfo", EurodyneIO.BoostInfo(0,0, boostValue))
+        saveIntent.putExtra("OctaneInfo", EurodyneIO.OctaneInfo(0, 0, octaneValue))
+        val saveMessage = bluetoothThread?.handler?.obtainMessage()
+        saveMessage?.obj = saveIntent
+        bluetoothThread?.handler?.sendMessage(saveMessage)
+    }
+
+    fun handleMessage(message: Message) {
+        val intent = message.obj as? Intent
+        val octaneData = intent?.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")
+        val boostData = intent?.getParcelableExtra<EurodyneIO.BoostInfo>("boostInfo")
+        if (octaneData != null && boostData != null) {
+            fieldOneFragment = AdjustFieldFragment.newInstance(octaneData.minimum, octaneData.maximum, "Octane")
+            fieldTwoFragment = AdjustFieldFragment.newInstance(boostData.minimum, boostData.maximum, "Boost")
+            fieldOneFragment?.setValueFromData(octaneData.current)
+            fieldTwoFragment?.setValueFromData(boostData.current)
+            supportFragmentManager.beginTransaction()
+                    .replace(R.id.fieldOneFragmentContainer, fieldOneFragment, "fieldOne")
+                    .replace(R.id.fieldTwoFragmentContainer, fieldTwoFragment, "fieldTwo")
+                    .commit()
+        }
     }
 
     override fun onParameterAdjusted(name: String, value: Int) {

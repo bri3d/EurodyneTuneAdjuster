@@ -21,8 +21,14 @@ class ElmIO(val inputStream : InputStream, val outputStream: OutputStream){
         waitForOk()
         writeString("AT SP 0") // Autodetect protocol
         waitForOk()
-        writeString("AT SH 7E0") // Talk to ECU via ye olde CAN headers
+        writeString("AT SH 7E0") // 7E0 communicates with ECU 1 in ISO15765-4 / UDS
         waitForOk()
+    }
+
+    fun stop() {
+        ioReactor.interrupt()
+        inputStream.close()
+        outputStream.close()
     }
 
     fun waitForOther() {

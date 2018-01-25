@@ -2,13 +2,9 @@ package com.brianledbetter.tuneadjuster.elm327
 
 import android.bluetooth.BluetoothSocket
 import android.bluetooth.BluetoothDevice
-import android.content.BroadcastReceiver
 import android.content.ContentValues.TAG
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Handler
-import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 import java.io.IOException
 import java.util.*
@@ -28,6 +24,9 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainHan
             edIo.setBoostInfo(elmIO, boost.current)
             edIo.setOctaneInfo(elmIO, octane.current)
             fetchInfo(elmIO)
+        }
+        if (intent?.action == "StopConnection") {
+            cancel()
         }
         true
     })
@@ -64,6 +63,9 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainHan
         elmIO.start()
         fetchInfo(elmIO)
         this.elmIO = elmIO
+        while(!Thread.interrupted()) {
+            Thread.yield()
+        }
     }
 
     fun fetchInfo(elmIO : ElmIO) {
@@ -82,7 +84,9 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainHan
 
     fun cancel() {
         try {
+            elmIO?.stop()
             mmSocket!!.close()
+            interrupt()
         } catch (e: IOException) {
             Log.e(TAG, "Could not close the client socket", e)
         }
