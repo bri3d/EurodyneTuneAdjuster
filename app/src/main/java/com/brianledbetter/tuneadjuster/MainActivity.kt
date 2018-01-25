@@ -27,8 +27,8 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
             fieldOneFragment?.setValueFromData(octaneData.current)
             fieldTwoFragment?.setValueFromData(boostData.current)
             supportFragmentManager.beginTransaction()
-                    .add(R.id.fieldOneFragmentContainer, fieldOneFragment, "fieldOne")
-                    .add(R.id.fieldTwoFragmentContainer, fieldTwoFragment, "fieldTwo")
+                    .replace(R.id.fieldOneFragmentContainer, fieldOneFragment, "fieldOne")
+                    .replace(R.id.fieldTwoFragmentContainer, fieldTwoFragment, "fieldTwo")
                     .commit()
         }
         true
