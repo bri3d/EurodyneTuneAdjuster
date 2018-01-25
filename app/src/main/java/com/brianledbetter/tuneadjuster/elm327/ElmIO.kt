@@ -9,7 +9,7 @@ import java.nio.charset.Charset
 class ElmIO(val inputStream : InputStream, val outputStream: OutputStream){
     val ioReactor = ElmIOReactor(inputStream)
 
-    fun start(controllerAddress: String) {
+    fun start() {
         ioReactor.start()
         writeString("AT Z") // Reset
         waitForOther()
@@ -27,7 +27,7 @@ class ElmIO(val inputStream : InputStream, val outputStream: OutputStream){
 
     fun waitForOther() {
         var gotOther = false
-        ioReactor.otherHandler = { otherString ->
+        ioReactor.otherHandler = { _ ->
             gotOther = true
             true
         }
@@ -40,9 +40,7 @@ class ElmIO(val inputStream : InputStream, val outputStream: OutputStream){
             gotOk = true
             true
         }
-        while (!gotOk) {
-            Thread.yield()
-        }
+        while (!gotOk) Thread.yield()
     }
 
     fun writeString(string: String) {

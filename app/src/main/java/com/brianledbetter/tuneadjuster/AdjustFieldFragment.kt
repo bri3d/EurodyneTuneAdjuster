@@ -14,6 +14,7 @@ class AdjustFieldFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
 
     private var minValue: Int? = null
     private var maxValue: Int? = null
+    private var value: Int? = null
     private var title: String? = null
 
     private var mListener: OnParameterAdjustedListener? = null
@@ -41,6 +42,7 @@ class AdjustFieldFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
         this.minValueLabel.text = minValue.toString()
         this.maxValueLabel.text = maxValue.toString()
         this.titleLabel.text = title
+        this.valueBar.progress = (value ?: 0) - (minValue ?: 0)
         this.rawValue.text = (this.valueBar.progress + (minValue ?: 0)).toString()
     }
 
@@ -59,15 +61,16 @@ class AdjustFieldFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
     }
 
     override fun onProgressChanged(p0: SeekBar?, value: Int, p2: Boolean) {
-        this.rawValue.text = (value + (minValue?: 0)).toString()
-        this.rawValue.setTextColor(Color.RED)
-        mListener?.onParameterAdjusted(value)
+        this.rawValue?.text = (value + (minValue?: 0)).toString()
+        this.rawValue?.setTextColor(Color.RED)
+        mListener?.onParameterAdjusted(title ?: "", value)
     }
 
     fun setValueFromData(value: Int) {
-        this.rawValue.text = value.toString()
-        this.valueBar.progress = value
-        this.rawValue.setTextColor(Color.BLACK)
+        this.value = value
+        this.rawValue?.text = value.toString()
+        this.valueBar?.progress = value
+        this.rawValue?.setTextColor(Color.BLACK)
     }
 
     override fun onStartTrackingTouch(p0: SeekBar?) {
@@ -79,7 +82,7 @@ class AdjustFieldFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
     }
 
     interface OnParameterAdjustedListener {
-        fun onParameterAdjusted(value: Int)
+        fun onParameterAdjusted(name: String, value: Int)
     }
 
     companion object {

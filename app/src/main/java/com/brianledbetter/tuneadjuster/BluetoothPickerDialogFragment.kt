@@ -32,7 +32,7 @@ class BluetoothPickerDialogFragment : DialogFragment() {
         super.onStart()
         val d = dialog as AlertDialog
         mOKButton = d.getButton(Dialog.BUTTON_POSITIVE)
-        mOKButton?.isEnabled = mPossibleDevices?.isNotEmpty() ?: false
+        mOKButton?.isEnabled = mPossibleDevices.isNotEmpty()
     }
 
     override fun onAttach(context: Context) {

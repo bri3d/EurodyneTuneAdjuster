@@ -7,37 +7,58 @@ import kotlinx.android.synthetic.main.activity_main.*
 import android.widget.Toast
 import android.os.Parcelable
 import android.bluetooth.BluetoothAdapter
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
+import android.os.Handler
 import android.support.v4.content.LocalBroadcastManager
 import android.widget.CompoundButton
-import com.brianledbetter.tuneadjuster.elm327.ConnectThread
+import com.brianledbetter.tuneadjuster.elm327.BluetoothThread
 import com.brianledbetter.tuneadjuster.elm327.EurodyneIO
 
 class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjustedListener, BluetoothPickerDialogFragment.BluetoothDialogListener {
     private var fieldOneFragment: AdjustFieldFragment? = null
     private var fieldTwoFragment: AdjustFieldFragment? = null
-    private var receiver: Receiver? = null
+    private var handler: Handler = Handler({ message ->
+        val intent = message.obj as? Intent
+        val octaneData = intent?.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")
+        val boostData = intent?.getParcelableExtra<EurodyneIO.BoostInfo>("boostInfo")
+        if (octaneData != null && boostData != null) {
+            fieldOneFragment = AdjustFieldFragment.newInstance(octaneData.minimum, octaneData.maximum, "Octane")
+            fieldTwoFragment = AdjustFieldFragment.newInstance(boostData.minimum, boostData.maximum, "Boost")
+            fieldOneFragment?.setValueFromData(octaneData.current)
+            fieldTwoFragment?.setValueFromData(boostData.current)
+            supportFragmentManager.beginTransaction()
+                    .add(R.id.fieldOneFragmentContainer, fieldOneFragment, "fieldOne")
+                    .add(R.id.fieldTwoFragmentContainer, fieldTwoFragment, "fieldTwo")
+                    .commit()
+        }
+        true
+    })
+    private var boostValue = 0
+    private var octaneValue = 0
+    private var bluetoothThread : BluetoothThread? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        receiver = Receiver(this)
-        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter("TuneData"))
-        connectionSwitch.setOnCheckedChangeListener({ buttonView: CompoundButton, isChecked: Boolean ->
+        connectionSwitch.setOnCheckedChangeListener({ _: CompoundButton, isChecked: Boolean ->
             if (isChecked) {
                 startConnection()
             } else {
                 stopConnection()
             }
         })
+        button.setOnClickListener({_ ->
+            val saveIntent = Intent("SaveBoostAndOctane")
+            saveIntent.putExtra("BoostInfo", EurodyneIO.BoostInfo(0,0, boostValue))
+            saveIntent.putExtra("OctaneInfo", EurodyneIO.OctaneInfo(0, 0, octaneValue))
+            val saveMessage = bluetoothThread?.handler?.obtainMessage()
+            saveMessage?.obj = saveIntent
+            bluetoothThread?.handler?.sendMessage(saveMessage)
+        } )
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver)
     }
 
     fun startConnection() {
@@ -61,7 +82,13 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     fun stopConnection() {
     }
 
-    override fun onParameterAdjusted(value: Int) {
+    override fun onParameterAdjusted(name: String, value: Int) {
+        if (name == "Octane") {
+            octaneValue = value
+        }
+        if (name == "Boost") {
+            boostValue = value
+        }
     }
 
     override fun onDialogNegativeClick(dialog: DialogFragment) {
@@ -71,27 +98,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     override fun onDialogPositiveClick(dialog: DialogFragment, selectedDevice: String) {
         val b = BluetoothAdapter.getDefaultAdapter()
         val device = b.getRemoteDevice(selectedDevice)
-        val connectThread = ConnectThread(device, this)
-        connectThread.start()
+        bluetoothThread = BluetoothThread(device, handler)
+        bluetoothThread?.start()
     }
-
-    class Receiver(val activity : MainActivity) : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "TuneData") {
-                val octaneData = intent?.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")
-                val boostData = intent?.getParcelableExtra<EurodyneIO.BoostInfo>("boostInfo")
-                if (octaneData != null && boostData != null) {
-                    activity.fieldOneFragment = AdjustFieldFragment.newInstance(octaneData.minimum, octaneData.maximum, "Octane")
-                    activity.fieldTwoFragment = AdjustFieldFragment.newInstance(boostData.minimum, boostData.maximum, "Boost")
-                    activity.fieldOneFragment?.setValueFromData(octaneData.current)
-                    activity.fieldTwoFragment?.setValueFromData(boostData.current)
-                    activity.supportFragmentManager.beginTransaction()
-                            .add(R.id.fieldOneFragmentContainer, activity.fieldOneFragment, "fieldOne")
-                            .add(R.id.fieldTwoFragmentContainer, activity.fieldTwoFragment, "fieldTwo")
-                            .commit()
-                }
-            }
-        }
-    }
-
 }

@@ -2,6 +2,8 @@ package com.brianledbetter.tuneadjuster.elm327
 
 import android.os.Parcel
 import android.os.Parcelable
+import unsigned.Ubyte
+import unsigned.toUbyte
 
 
 /**
@@ -102,7 +104,7 @@ class EurodyneIO {
         var currentBoost = 0
         var operationReturned = false
         io.ioReactor.messageHandler = {bytes ->
-            minBoost = calculateBoost(bytes[3].toInt())
+            minBoost = calculateBoost(bytes[3].toUbyte())
             operationReturned = true
             true
         }
@@ -110,7 +112,7 @@ class EurodyneIO {
         while (!operationReturned) Thread.yield()
         operationReturned = false
         io.ioReactor.messageHandler = {bytes ->
-            maxBoost = calculateBoost(bytes[3].toInt())
+            maxBoost = calculateBoost(bytes[3].toUbyte())
             operationReturned = true
             true
         }
@@ -118,7 +120,7 @@ class EurodyneIO {
         while (!operationReturned) Thread.yield()
         operationReturned = false
         io.ioReactor.messageHandler = {bytes ->
-            currentBoost = calculateBoost(bytes[3].toInt())
+            currentBoost = calculateBoost(bytes[3].toUbyte())
             operationReturned = true
             true
         }
@@ -128,7 +130,37 @@ class EurodyneIO {
         return BoostInfo(minBoost, maxBoost, currentBoost)
     }
 
-    fun calculateBoost(boost : Int) : Int {
+    fun setBoostInfo(io : ElmIO, boost : Int) {
+        val writeBoostByte = calculateWriteBoost(boost)
+        val boostByteString = String.format("%02x", writeBoostByte.toByte());
+        var operationReturned = false
+        io.ioReactor.messageHandler = {_ ->
+            operationReturned = true
+            true
+        }
+        io.writeString("2E F1 F8 " + boostByteString)
+        while (!operationReturned) Thread.yield()
+    }
+
+    fun setOctaneInfo(io : ElmIO, octane : Int) {
+        val octaneByteString = String.format("%02x", octane.toByte())
+                var operationReturned = false
+        io.ioReactor.messageHandler = {_ ->
+            operationReturned = true
+            true
+        }
+        io.writeString("2E F1 F9 " + octaneByteString)
+        while (!operationReturned) Thread.yield()
+    }
+
+    fun calculateWriteBoost(psi: Int) : Ubyte {
+        val offsetPsi = psi + 16
+        val num = (offsetPsi.toDouble() / 0.014503773773).toInt()
+        val num2 = (num.toDouble() * 0.047110065099374217).toInt()
+        return num2.toUbyte()
+    }
+
+    fun calculateBoost(boost : Ubyte) : Int {
         val num = (boost.toDouble() / 0.047110065099374217).toInt()
         val num2 = (num.toDouble() * 0.014503773773).toInt()
         return num2 - 15
