@@ -14,12 +14,7 @@ class BluetoothService: Service() {
     private var threadMessenger : Messenger? = null
     private val messageToActivityHandler = Handler() { message ->
         val messageIntent = message.obj as Intent
-
-        val forwardMessage = Message()
-        forwardMessage.obj = messageIntent
-
-        threadMessenger?.send(forwardMessage)
-
+        threadMessenger?.send(messageWithIntent(messageIntent))
         if (messageIntent.action == "SocketClosed") {
             btThread = null
         }
@@ -28,23 +23,22 @@ class BluetoothService: Service() {
 
     private val fromActivityMessenger = Messenger(Handler() { message ->
         val messageIntent = message.obj as Intent
+
+        if (message.replyTo != null) {
+            threadMessenger = message.replyTo
+        }
+
         when (messageIntent.action) {
             "StartConnection" -> {
-                threadMessenger = message.replyTo
                 val selectedDevice = messageIntent?.getStringExtra("BluetoothDevice")
                 val b = BluetoothAdapter.getDefaultAdapter()
                 val bluetoothDevice = b.getRemoteDevice(selectedDevice)
                 btThread = BluetoothThread(bluetoothDevice, Messenger(messageToActivityHandler))
                 btThread?.start()
-                val message = Message()
-                message.obj = getStatusIntent()
-                threadMessenger?.send(message)
+                threadMessenger?.send(messageWithIntent(getStatusIntent()))
             }
             "GetConnectionStatus" -> {
-                threadMessenger = message.replyTo
-                val message = Message()
-                message.obj = getStatusIntent()
-                threadMessenger?.send(message)
+                threadMessenger?.send(messageWithIntent(getStatusIntent()))
             }
             else -> { // Forward on to connection thread
                 val message = btThread?.handler?.obtainMessage()
@@ -61,6 +55,12 @@ class BluetoothService: Service() {
         } else {
             return Intent("ConnectionNotActive")
         }
+    }
+
+    private fun messageWithIntent(i: Intent) : Message {
+        val message = Message()
+        message.obj = i
+        return message
     }
 
     override fun onBind(intent: Intent?): IBinder {

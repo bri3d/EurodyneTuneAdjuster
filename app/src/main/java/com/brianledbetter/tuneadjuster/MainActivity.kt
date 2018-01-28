@@ -29,11 +29,8 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     inner class BluetoothConnection : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             serviceMessenger = Messenger(service)
-            val message = Message()
             val statusIntent = Intent("GetConnectionStatus")
-            message.replyTo = serviceReceiveMessenger
-            message.obj = statusIntent
-            serviceMessenger?.send(message)
+            serviceMessenger?.send(messageWithIntent(statusIntent))
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -81,7 +78,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
         unbindService(serviceConnection)
     }
 
-    fun startConnection() {
+    private fun startConnection() {
         statusLabel.text = resources.getString(R.string.connecting)
         val b = BluetoothAdapter.getDefaultAdapter()
 
@@ -100,24 +97,20 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
         }
     }
 
-    fun stopConnection() {
+    private fun stopConnection() {
         val stopIntent = Intent("StopConnection")
-        val stopMessage = Message()
-        stopMessage?.obj = stopIntent
-        serviceMessenger?.send(stopMessage)
+        serviceMessenger?.send(messageWithIntent(stopIntent))
     }
 
-    fun saveBoostAndOctane() {
+    private fun saveBoostAndOctane() {
         statusLabel.text = resources.getString(R.string.saving)
         val saveIntent = Intent("SaveBoostAndOctane")
         saveIntent.putExtra("BoostInfo", EurodyneIO.BoostInfo(0,0, boostValue))
         saveIntent.putExtra("OctaneInfo", EurodyneIO.OctaneInfo(0, 0, octaneValue))
-        val saveMessage = Message()
-        saveMessage?.obj = saveIntent
-        serviceMessenger?.send(saveMessage)
+        serviceMessenger?.send(messageWithIntent(saveIntent))
     }
 
-    fun handleMessage(message: Message) {
+    private fun handleMessage(message: Message) {
         val intent = message.obj as? Intent
         when (intent?.action) {
             "SocketClosed", "ConnectionNotActive" -> {
@@ -163,10 +156,14 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
 
     override fun onDialogPositiveClick(dialog: DialogFragment, selectedDevice: String) {
         val connectIntent = Intent("StartConnection")
-        val connectMessage = Message()
-        connectMessage.obj = connectIntent
-        connectMessage.replyTo = serviceReceiveMessenger
         connectIntent.putExtra("BluetoothDevice", selectedDevice)
-        serviceMessenger?.send(connectMessage)
+        serviceMessenger?.send(messageWithIntent(connectIntent))
+    }
+
+    private fun messageWithIntent(i : Intent) : Message {
+        val message = Message()
+        message.obj = i
+        message.replyTo = serviceReceiveMessenger
+        return message
     }
 }

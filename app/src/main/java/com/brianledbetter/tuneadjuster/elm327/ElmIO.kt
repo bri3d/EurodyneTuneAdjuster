@@ -6,7 +6,7 @@ import java.nio.charset.Charset
 /**
  * Created by brian.ledbetter on 1/20/18.
  */
-class ElmIO(val inputStream : InputStream, val outputStream: OutputStream){
+class ElmIO(private val inputStream : InputStream, private val outputStream: OutputStream){
     val ioReactor = ElmIOReactor(inputStream)
 
     fun start() {

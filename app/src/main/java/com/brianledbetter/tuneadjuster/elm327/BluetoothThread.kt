@@ -15,7 +15,7 @@ import java.util.*
 class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMessenger : Messenger) : Thread() {
     private val MY_UUID : UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb")
     private val mmSocket: BluetoothSocket?
-    var elmIO : ElmIO? = null
+    private var elmIO : ElmIO? = null
     val handler : Handler = Handler({ message ->
         val intent = message.obj as? Intent
         if (intent?.action == "SaveBoostAndOctane") {
@@ -72,14 +72,14 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMes
         cancel()
     }
 
-    fun sendClosed() {
+    private fun sendClosed() {
         val closeMessage = handler.obtainMessage()
         val intent = Intent("SocketClosed")
         closeMessage.obj = intent
         mainMessenger.send(closeMessage)
     }
 
-    fun fetchInfo(elmIO : ElmIO) {
+    private fun fetchInfo(elmIO : ElmIO) {
         val edIo = EurodyneIO()
         val octaneInfo = edIo.getOctaneInfo(elmIO)
         val boostInfo = edIo.getBoostInfo(elmIO)
@@ -93,7 +93,7 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMes
         mainMessenger.send(message)
     }
 
-    fun cancel() {
+    private fun cancel() {
         try {
             elmIO?.stop()
             mmSocket!!.close()
