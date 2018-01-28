@@ -72,8 +72,8 @@ class EurodyneIO {
         var operationReturned = false
         var returnBytes : ByteArray? = null
         io.ioReactor.messageHandler = { bytes ->
-            operationReturned = true
             returnBytes = bytes
+            operationReturned = true
             true
         }
         try {
