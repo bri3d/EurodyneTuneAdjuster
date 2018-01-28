@@ -11,18 +11,22 @@ class ElmIO(val inputStream : InputStream, val outputStream: OutputStream){
 
     fun start() {
         ioReactor.start()
-        writeString("AT Z") // Reset
-        waitForOther()
-        writeString("AT E0") // Disable echo
-        waitForOk()
-        writeString("AT AL") // Allow long messages
-        waitForOk()
-        writeString("AT ST FF") // Timeout to maximum
-        waitForOk()
-        writeString("AT SP 0") // Autodetect protocol
-        waitForOk()
-        writeString("AT SH 7E0") // 7E0 communicates with ECU 1 in ISO15765-4 / UDS
-        waitForOk()
+        try {
+            writeString("AT Z") // Reset
+            waitForOther()
+            writeString("AT E0") // Disable echo
+            waitForOk()
+            writeString("AT AL") // Allow long messages
+            waitForOk()
+            writeString("AT ST FF") // Timeout to maximum
+            waitForOk()
+            writeString("AT SP 0") // Autodetect protocol
+            waitForOk()
+            writeString("AT SH 7E0") // 7E0 communicates with ECU 1 in ISO15765-4 / UDS
+            waitForOk()
+        } catch (e : IOException) {
+            stop()
+        }
     }
 
     fun stop() {

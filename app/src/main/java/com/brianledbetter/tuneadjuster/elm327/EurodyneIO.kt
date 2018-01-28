@@ -5,6 +5,7 @@ import android.os.Parcelable
 import unsigned.Ubyte
 import unsigned.toUInt
 import unsigned.toUbyte
+import java.io.IOException
 
 
 /**
@@ -67,35 +68,36 @@ class EurodyneIO {
         }
     }
 
+    fun writeBytesBlocking(io : ElmIO, string : String, callback : (bytes : ByteArray?) -> Unit) {
+        var operationReturned = false
+        var returnBytes : ByteArray? = null
+        io.ioReactor.messageHandler = { bytes ->
+            operationReturned = true
+            returnBytes = bytes
+            true
+        }
+        try {
+            io.writeString(string)
+        } catch (e : IOException) {
+            return
+        }
+        while (!operationReturned) Thread.yield()
+        callback(returnBytes)
+    }
+
     fun getOctaneInfo(io : ElmIO) : OctaneInfo {
         var minOctane = 0
         var maxOctane = 0
         var currentOctane = 0
-        var operationReturned = false
-        io.ioReactor.messageHandler = {bytes ->
-            minOctane = bytes[3].toUInt()
-            operationReturned = true
-            true
-        }
-        io.writeString("22 FD 32") // ReadLocalIdentifier
-        while (!operationReturned) Thread.yield()
-        operationReturned = false
-        io.ioReactor.messageHandler = {bytes ->
-            maxOctane = bytes[3].toUInt()
-            operationReturned = true
-            true
-        }
-        io.writeString("22 FD 33") // ReadLocalIdentifier
-        while (!operationReturned) Thread.yield()
-        operationReturned = false
-        io.ioReactor.messageHandler = {bytes ->
-            currentOctane = bytes[3].toUInt()
-            operationReturned = true
-            true
-        }
-        io.writeString("22 F1 F9") // ReadLocalIdentifier
-        while (!operationReturned) Thread.yield()
-        operationReturned = false
+        writeBytesBlocking(io, "22 FD 32", {bytes ->
+            minOctane = bytes!![3].toUInt()
+        })
+        writeBytesBlocking(io, "22 FD 33", {bytes ->
+            maxOctane = bytes!![3].toUInt()
+        })
+        writeBytesBlocking(io, "22 F1 F9", {bytes ->
+            currentOctane = bytes!![3].toUInt()
+        })
         return OctaneInfo(minOctane, maxOctane, currentOctane)
     }
 
@@ -103,55 +105,28 @@ class EurodyneIO {
         var minBoost = 0
         var maxBoost = 0
         var currentBoost = 0
-        var operationReturned = false
-        io.ioReactor.messageHandler = {bytes ->
-            minBoost = calculateBoost(bytes[3].toUbyte())
-            operationReturned = true
-            true
-        }
-        io.writeString("22 FD 30") // ReadLocalIdentifier
-        while (!operationReturned) Thread.yield()
-        operationReturned = false
-        io.ioReactor.messageHandler = {bytes ->
-            maxBoost = calculateBoost(bytes[3].toUbyte())
-            operationReturned = true
-            true
-        }
-        io.writeString("22 FD 31") // ReadLocalIdentifier
-        while (!operationReturned) Thread.yield()
-        operationReturned = false
-        io.ioReactor.messageHandler = {bytes ->
-            currentBoost = calculateBoost(bytes[3].toUbyte())
-            operationReturned = true
-            true
-        }
-        io.writeString("22 F1 F8") // ReadLocalIdentifier
-        while (!operationReturned) Thread.yield()
-        operationReturned = false
+        writeBytesBlocking(io, "22 FD 30", {bytes ->
+            minBoost = calculateBoost(bytes!![3].toUbyte())
+        })
+        writeBytesBlocking(io, "22 FD 31", {bytes ->
+            maxBoost = calculateBoost(bytes!![3].toUbyte())
+        })
+        writeBytesBlocking(io, "22 F1 F8", {bytes ->
+            currentBoost = calculateBoost(bytes!![3].toUbyte())
+        })
         return BoostInfo(minBoost, maxBoost, currentBoost)
     }
 
     fun setBoostInfo(io : ElmIO, boost : Int) {
         val writeBoostByte = calculateWriteBoost(boost)
         val boostByteString = String.format("%02x", writeBoostByte.toByte());
-        var operationReturned = false
-        io.ioReactor.messageHandler = {_ ->
-            operationReturned = true
-            true
-        }
-        io.writeString("2E F1 F8 " + boostByteString) // WriteLocalIdentifier
-        while (!operationReturned) Thread.yield()
+        writeBytesBlocking(io, "2E F1 F8 " + boostByteString, {_ ->})
     }
 
     fun setOctaneInfo(io : ElmIO, octane : Int) {
         val octaneByteString = String.format("%02x", octane.toUbyte().toByte())
-                var operationReturned = false
-        io.ioReactor.messageHandler = {_ ->
-            operationReturned = true
-            true
-        }
-        io.writeString("2E F1 F9 " + octaneByteString) // WriteLocalIdentifier
-        while (!operationReturned) Thread.yield()
+        writeBytesBlocking(io, "2E F1 F0 " + octaneByteString, {_ ->})
+
     }
 
     fun calculateWriteBoost(psi: Int) : Ubyte {

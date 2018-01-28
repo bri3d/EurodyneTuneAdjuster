@@ -2,40 +2,65 @@ package com.brianledbetter.tuneadjuster
 
 import android.app.DialogFragment
 import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
 import kotlinx.android.synthetic.main.activity_main.*
 import android.widget.Toast
-import android.os.Parcelable
 import android.bluetooth.BluetoothAdapter
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
-import android.os.Handler
-import android.os.Message
+import android.content.ServiceConnection
+import android.os.*
 import android.widget.CompoundButton
-import com.brianledbetter.tuneadjuster.elm327.BluetoothThread
 import com.brianledbetter.tuneadjuster.elm327.EurodyneIO
 
 class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjustedListener, BluetoothPickerDialogFragment.BluetoothDialogListener {
     private var fieldOneFragment: AdjustFieldFragment? = null
     private var fieldTwoFragment: AdjustFieldFragment? = null
-
-    private var handler: Handler = Handler({ message ->
-       handleMessage(message)
-        true
-    })
-
     private var boostValue = 0
     private var octaneValue = 0
 
-    private var bluetoothThread : BluetoothThread? = null
+    private var serviceReceiveMessenger = Messenger(Handler({ message ->
+       handleMessage(message)
+        true
+    }))
+
+    private var serviceMessenger : Messenger? = null
+
+    inner class BluetoothConnection : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            serviceMessenger = Messenger(service)
+            val message = Message()
+            val statusIntent = Intent("GetConnectionStatus")
+            message.replyTo = serviceReceiveMessenger
+            message.obj = statusIntent
+            serviceMessenger?.send(message)
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            serviceMessenger = null
+            isActive = false
+        }
+    }
+
+    private var serviceConnection = BluetoothConnection()
+
+    private var isActive = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val serviceIntent = Intent(this, BluetoothService::class.java)
+        startService(serviceIntent)
+        bindService(serviceIntent, serviceConnection,
+                Context.BIND_AUTO_CREATE)
+
+        isActive = savedInstanceState?.getBoolean("Active") ?: false
+
         connectionSwitch.setOnCheckedChangeListener({ _: CompoundButton, isChecked: Boolean ->
-            if (isChecked) {
+            if (isChecked && !isActive) {
                 startConnection()
-            } else {
+            } else if (!isChecked) {
                 stopConnection()
             }
         })
@@ -45,8 +70,15 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
         } )
     }
 
+    override fun onSaveInstanceState(outState: Bundle?, outPersistentState: PersistableBundle?) {
+        outState?.putBoolean("Active", isActive)
+        super.onSaveInstanceState(outState, outPersistentState)
+
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        unbindService(serviceConnection)
     }
 
     fun startConnection() {
@@ -70,9 +102,9 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
 
     fun stopConnection() {
         val stopIntent = Intent("StopConnection")
-        val stopMessage = bluetoothThread?.handler?.obtainMessage()
+        val stopMessage = Message()
         stopMessage?.obj = stopIntent
-        bluetoothThread?.handler?.sendMessage(stopMessage)
+        serviceMessenger?.send(stopMessage)
     }
 
     fun saveBoostAndOctane() {
@@ -80,29 +112,38 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
         val saveIntent = Intent("SaveBoostAndOctane")
         saveIntent.putExtra("BoostInfo", EurodyneIO.BoostInfo(0,0, boostValue))
         saveIntent.putExtra("OctaneInfo", EurodyneIO.OctaneInfo(0, 0, octaneValue))
-        val saveMessage = bluetoothThread?.handler?.obtainMessage()
+        val saveMessage = Message()
         saveMessage?.obj = saveIntent
-        bluetoothThread?.handler?.sendMessage(saveMessage)
+        serviceMessenger?.send(saveMessage)
     }
 
     fun handleMessage(message: Message) {
         val intent = message.obj as? Intent
-        if (intent?.action == "SocketClosed") {
-            statusLabel.text = resources.getString(R.string.not_connected)
-            connectionSwitch.isChecked = false
-        } else {
-            val octaneData = intent?.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")
-            val boostData = intent?.getParcelableExtra<EurodyneIO.BoostInfo>("boostInfo")
-            if (octaneData != null && boostData != null) {
-                statusLabel.text = resources.getString(R.string.got_data)
-                fieldOneFragment = AdjustFieldFragment.newInstance(octaneData.minimum, octaneData.maximum, octaneData.current, "Octane")
-                fieldTwoFragment = AdjustFieldFragment.newInstance(boostData.minimum, boostData.maximum, boostData.current, "Boost")
-                boostValue = boostData.current
-                octaneValue = octaneData.current
-                supportFragmentManager.beginTransaction()
-                        .replace(R.id.fieldOneFragmentContainer, fieldOneFragment, "fieldOne")
-                        .replace(R.id.fieldTwoFragmentContainer, fieldTwoFragment, "fieldTwo")
-                        .commit()
+        when (intent?.action) {
+            "SocketClosed", "ConnectionNotActive" -> {
+                statusLabel.text = resources.getString(R.string.not_connected)
+                isActive = false
+                connectionSwitch.isChecked = false
+            }
+            "ConnectionActive" -> {
+                isActive = true
+                connectionSwitch.isChecked = true
+                statusLabel.text = resources.getString(R.string.connecting)
+            }
+            else -> {
+                val octaneData = intent?.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")
+                val boostData = intent?.getParcelableExtra<EurodyneIO.BoostInfo>("boostInfo")
+                if (octaneData != null && boostData != null) {
+                    statusLabel.text = resources.getString(R.string.got_data)
+                    fieldOneFragment = AdjustFieldFragment.newInstance(octaneData.minimum, octaneData.maximum, octaneData.current, "Octane")
+                    fieldTwoFragment = AdjustFieldFragment.newInstance(boostData.minimum, boostData.maximum, boostData.current, "Boost")
+                    boostValue = boostData.current
+                    octaneValue = octaneData.current
+                    supportFragmentManager.beginTransaction()
+                            .replace(R.id.fieldOneFragmentContainer, fieldOneFragment, "fieldOne")
+                            .replace(R.id.fieldTwoFragmentContainer, fieldTwoFragment, "fieldTwo")
+                            .commit()
+                }
             }
         }
     }
@@ -117,13 +158,15 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     }
 
     override fun onDialogNegativeClick(dialog: DialogFragment) {
-
+        stopConnection()
     }
 
     override fun onDialogPositiveClick(dialog: DialogFragment, selectedDevice: String) {
-        val b = BluetoothAdapter.getDefaultAdapter()
-        val device = b.getRemoteDevice(selectedDevice)
-        bluetoothThread = BluetoothThread(device, handler)
-        bluetoothThread?.start()
+        val connectIntent = Intent("StartConnection")
+        val connectMessage = Message()
+        connectMessage.obj = connectIntent
+        connectMessage.replyTo = serviceReceiveMessenger
+        connectIntent.putExtra("BluetoothDevice", selectedDevice)
+        serviceMessenger?.send(connectMessage)
     }
 }

@@ -5,12 +5,14 @@ import android.bluetooth.BluetoothDevice
 import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Handler
+import android.os.Message
+import android.os.Messenger
 import android.util.Log
 import java.io.IOException
 import java.util.*
 
 
-class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainHandler : Handler) : Thread() {
+class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMessenger : Messenger) : Thread() {
     private val MY_UUID : UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb")
     private val mmSocket: BluetoothSocket?
     var elmIO : ElmIO? = null
@@ -74,21 +76,21 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainHan
         val closeMessage = handler.obtainMessage()
         val intent = Intent("SocketClosed")
         closeMessage.obj = intent
-        mainHandler.sendMessage(closeMessage)
+        mainMessenger.send(closeMessage)
     }
 
     fun fetchInfo(elmIO : ElmIO) {
         val edIo = EurodyneIO()
         val octaneInfo = edIo.getOctaneInfo(elmIO)
         val boostInfo = edIo.getBoostInfo(elmIO)
-        val message = mainHandler.obtainMessage()
+        val message = Message()
         val broadcastIntent = Intent()
         broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT)
         broadcastIntent.action = "TuneData"
         broadcastIntent.putExtra("boostInfo", boostInfo)
         broadcastIntent.putExtra("octaneInfo", octaneInfo)
         message.obj = broadcastIntent
-        mainHandler.sendMessage(message)
+        mainMessenger.send(message)
     }
 
     fun cancel() {
