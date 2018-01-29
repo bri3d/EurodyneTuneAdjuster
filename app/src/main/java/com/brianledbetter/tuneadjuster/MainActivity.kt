@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     inner class BluetoothConnection : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             serviceMessenger = Messenger(service)
-            val statusIntent = Intent("GetConnectionStatus")
+            val statusIntent = Intent(BluetoothService.GET_CONNECTION_STATUS)
             serviceMessenger?.send(messageWithIntent(statusIntent))
         }
 
@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     }
 
     private fun stopConnection() {
-        val stopIntent = Intent("StopConnection")
+        val stopIntent = Intent(BluetoothService.STOP_CONNECTION)
         serviceMessenger?.send(messageWithIntent(stopIntent))
     }
 
@@ -113,12 +113,12 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     private fun handleMessage(message: Message) {
         val intent = message.obj as? Intent
         when (intent?.action) {
-            "SocketClosed", "ConnectionNotActive" -> {
+            BluetoothService.SOCKET_CLOSED, BluetoothService.CONNECTION_NOT_ACTIVE -> {
                 statusLabel.text = resources.getString(R.string.not_connected)
                 isActive = false
                 connectionSwitch.isChecked = false
             }
-            "ConnectionActive" -> {
+            BluetoothService.CONNECTION_ACTIVE -> {
                 isActive = true
                 connectionSwitch.isChecked = true
                 statusLabel.text = resources.getString(R.string.connecting)
@@ -155,7 +155,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     }
 
     override fun onDialogPositiveClick(dialog: DialogFragment, selectedDevice: String) {
-        val connectIntent = Intent("StartConnection")
+        val connectIntent = Intent(BluetoothService.START_CONNECTION)
         connectIntent.putExtra("BluetoothDevice", selectedDevice)
         serviceMessenger?.send(messageWithIntent(connectIntent))
     }

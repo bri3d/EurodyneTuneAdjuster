@@ -11,4 +11,8 @@
     <string name="save">Save</string>
     <string name="saving">Saving</string>
     <string name="not_connected">Not Connected</string>
+    <string name="notification_title">TuneAdjuster</string>
+    <string name="notification_message">Bluetooth Thread Active</string>
+    <string name="ticker_text">Connecting to Bluetooth</string>
+
 </resources>

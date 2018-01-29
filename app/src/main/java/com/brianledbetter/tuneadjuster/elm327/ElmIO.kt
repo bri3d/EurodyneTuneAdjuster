@@ -56,4 +56,21 @@ class ElmIO(private val inputStream : InputStream, private val outputStream: Out
     fun writeString(string: String) {
         outputStream.write((string + "\r").toByteArray(Charset.forName("US-ASCII")))
     }
+
+    fun writeBytesBlocking(string : String, callback : (bytes : ByteArray?) -> Unit) {
+        var operationReturned = false
+        var returnBytes : ByteArray? = null
+        ioReactor.messageHandler = { bytes ->
+            returnBytes = bytes
+            operationReturned = true
+            true
+        }
+        try {
+            writeString(string)
+        } catch (e : IOException) {
+            return
+        }
+        while (!operationReturned) Thread.yield()
+        callback(returnBytes)
+    }
 }
