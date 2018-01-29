@@ -23,7 +23,7 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMes
     val handler : Handler = Handler({ message ->
         val intent = message.obj as? Intent
         when(intent?.action) {
-            ServiceActions.SAVE_BOOST_AND_OCTANE -> {
+            ServiceActions.Requests.SAVE_BOOST_AND_OCTANE -> {
                 if (elmIO != null) {
                     val boost: EurodyneIO.BoostInfo = intent.getParcelableExtra("BoostInfo")
                     val octane: EurodyneIO.OctaneInfo = intent.getParcelableExtra("OctaneInfo")
@@ -34,19 +34,19 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMes
                     fetchTuneInfo(elmIO)
                 }
             }
-            ServiceActions.FETCH_TUNE_DATA -> {
+            ServiceActions.Requests.FETCH_TUNE_DATA -> {
                 if (elmIO != null) {
                     val elmIO = elmIO!!
                     fetchTuneInfo(elmIO)
                 }
             }
-            ServiceActions.FETCH_ECU_DATA -> {
+            ServiceActions.Requests.FETCH_ECU_DATA -> {
                 if (elmIO != null) {
                     val elmIO = elmIO!!
                     fetchEcuInfo(elmIO)
                 }
             }
-            ServiceActions.STOP_CONNECTION -> {
+            ServiceActions.Requests.STOP_CONNECTION -> {
                 cancel()
             }
         }
@@ -84,7 +84,7 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMes
         elmIO!!.start()
 
         val connectedMessage = Message()
-        connectedMessage.obj = Intent(ServiceActions.CONNECTED)
+        connectedMessage.obj = Intent(ServiceActions.Responses.CONNECTED)
         mainMessenger.send(connectedMessage)
 
         while(!Thread.interrupted()) {
@@ -95,7 +95,7 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMes
 
     private fun sendClosed() {
         val closeMessage = handler.obtainMessage()
-        val intent = Intent(ServiceActions.SOCKET_CLOSED)
+        val intent = Intent(ServiceActions.Responses.SOCKET_CLOSED)
         closeMessage.obj = intent
         mainMessenger.send(closeMessage)
     }
@@ -105,7 +105,7 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMes
         val octaneInfo = edIo.getOctaneInfo(elmIO)
         val boostInfo = edIo.getBoostInfo(elmIO)
         val message = Message()
-        val tuneIntent = Intent(ServiceActions.TUNE_DATA)
+        val tuneIntent = Intent(ServiceActions.Responses.TUNE_DATA)
         tuneIntent.putExtra("boostInfo", boostInfo)
         tuneIntent.putExtra("octaneInfo", octaneInfo)
         message.obj = tuneIntent
@@ -116,7 +116,7 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMes
         val ecuIO = EcuIO()
         val ecuInfo = ecuIO.getEcuInfo(elmIO)
         val message = Message()
-        val ecuIntent = Intent(ServiceActions.ECU_DATA)
+        val ecuIntent = Intent(ServiceActions.Responses.ECU_DATA)
         ecuIntent.putExtra("ecuInfo", ecuInfo)
         message.obj = ecuIntent
         mainMessenger.send(message)

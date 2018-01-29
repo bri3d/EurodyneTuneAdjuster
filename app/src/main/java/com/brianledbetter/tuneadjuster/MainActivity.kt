@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     inner class BluetoothConnection : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             serviceMessenger = Messenger(service)
-            val statusIntent = Intent(ServiceActions.GET_CONNECTION_STATUS)
+            val statusIntent = Intent(ServiceActions.Requests.GET_CONNECTION_STATUS)
             serviceMessenger?.send(messageWithIntent(statusIntent))
         }
 
@@ -93,7 +93,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
         val devices = b.bondedDevices.toTypedArray()
         if (devices.isNotEmpty()) {
             val bpdf = BluetoothPickerDialogFragment()
-            bpdf.mPossibleDevices = (devices as Array<Parcelable>)
+            bpdf.mPossibleDevices = devices as Array<Parcelable>
             bpdf.show(fragmentManager, "BluetoothPickerDialogFragment")
         } else {
             Toast.makeText(applicationContext, "ERROR! " + "No Bluetooth Device available!", Toast.LENGTH_LONG).show()
@@ -101,13 +101,13 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     }
 
     private fun stopConnection() {
-        val stopIntent = Intent(ServiceActions.STOP_CONNECTION)
+        val stopIntent = Intent(ServiceActions.Requests.STOP_CONNECTION)
         serviceMessenger?.send(messageWithIntent(stopIntent))
     }
 
     private fun saveBoostAndOctane() {
         statusLabel.text = resources.getString(R.string.saving)
-        val saveIntent = Intent(ServiceActions.SAVE_BOOST_AND_OCTANE)
+        val saveIntent = Intent(ServiceActions.Requests.SAVE_BOOST_AND_OCTANE)
         saveIntent.putExtra("BoostInfo", EurodyneIO.BoostInfo(0,0, boostValue))
         saveIntent.putExtra("OctaneInfo", EurodyneIO.OctaneInfo(0, 0, octaneValue))
         serviceMessenger?.send(messageWithIntent(saveIntent))
@@ -116,23 +116,26 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     private fun handleMessage(message: Message) {
         val intent = message.obj as? Intent
         when (intent?.action) {
-            ServiceActions.SOCKET_CLOSED, ServiceActions.CONNECTION_NOT_ACTIVE -> {
+            ServiceActions.Responses.SOCKET_CLOSED, ServiceActions.Responses.CONNECTION_NOT_ACTIVE -> {
                 statusLabel.text = resources.getString(R.string.not_connected)
                 isActive = false
                 connectionSwitch.isChecked = false
             }
-            ServiceActions.CONNECTION_ACTIVE -> {
+            ServiceActions.Responses.CONNECTION_ACTIVE -> {
                 isActive = true
                 connectionSwitch.isChecked = true
                 statusLabel.text = resources.getString(R.string.connecting)
             }
-            ServiceActions.CONNECTED -> {
-                serviceMessenger?.send(messageWithIntent(Intent(ServiceActions.FETCH_TUNE_DATA)))
+            ServiceActions.Responses.CONNECTED -> {
+                serviceMessenger?.send(messageWithIntent(Intent(ServiceActions.Requests.FETCH_ECU_DATA)))
 
             }
-            ServiceActions.TUNE_DATA -> {
-                val octaneData = intent?.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")
-                val boostData = intent?.getParcelableExtra<EurodyneIO.BoostInfo>("boostInfo")
+            ServiceActions.Responses.ECU_DATA -> {
+                serviceMessenger?.send(messageWithIntent(Intent(ServiceActions.Requests.FETCH_TUNE_DATA)))
+            }
+            ServiceActions.Responses.TUNE_DATA -> {
+                val octaneData = intent.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")
+                val boostData = intent.getParcelableExtra<EurodyneIO.BoostInfo>("boostInfo")
                 if (octaneData != null && boostData != null) {
                     statusLabel.text = resources.getString(R.string.got_data)
                     fieldOneFragment = AdjustFieldFragment.newInstance(octaneData.minimum, octaneData.maximum, octaneData.current, "Octane")
@@ -162,7 +165,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     }
 
     override fun onDialogPositiveClick(dialog: DialogFragment, selectedDevice: String) {
-        val connectIntent = Intent(ServiceActions.START_CONNECTION)
+        val connectIntent = Intent(ServiceActions.Requests.START_CONNECTION)
         connectIntent.putExtra("BluetoothDevice", selectedDevice)
         serviceMessenger?.send(messageWithIntent(connectIntent))
     }

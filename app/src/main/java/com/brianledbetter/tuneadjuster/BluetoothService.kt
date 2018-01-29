@@ -17,7 +17,7 @@ class BluetoothService: Service() {
     private val messageToActivityHandler = Handler() { message ->
         val messageIntent = message.obj as Intent
         threadMessenger?.send(messageWithIntent(messageIntent))
-        if (messageIntent.action == ServiceActions.SOCKET_CLOSED) {
+        if (messageIntent.action == ServiceActions.Responses.SOCKET_CLOSED) {
             btThread = null
         }
         true
@@ -31,21 +31,21 @@ class BluetoothService: Service() {
         }
 
         when (messageIntent.action) {
-            ServiceActions.START_CONNECTION -> {
-                val selectedDevice = messageIntent?.getStringExtra("BluetoothDevice")
+            ServiceActions.Requests.START_CONNECTION -> {
+                val selectedDevice = messageIntent.getStringExtra("BluetoothDevice")
                 val b = BluetoothAdapter.getDefaultAdapter()
                 val bluetoothDevice = b.getRemoteDevice(selectedDevice)
                 btThread = BluetoothThread(bluetoothDevice, Messenger(messageToActivityHandler))
                 btThread?.start()
                 threadMessenger?.send(messageWithIntent(getStatusIntent()))
             }
-            ServiceActions.GET_CONNECTION_STATUS -> {
+            ServiceActions.Requests.GET_CONNECTION_STATUS -> {
                 threadMessenger?.send(messageWithIntent(getStatusIntent()))
             }
             else -> { // Forward on to connection thread
-                val message = btThread?.handler?.obtainMessage()
-                message?.obj = messageIntent
-                btThread?.handler?.sendMessage(message)
+                val forwardMessage = btThread?.handler?.obtainMessage()
+                forwardMessage?.obj = messageIntent
+                btThread?.handler?.sendMessage(forwardMessage)
             }
         }
         true
@@ -53,9 +53,9 @@ class BluetoothService: Service() {
 
     private fun getStatusIntent() : Intent {
         if (btThread != null) {
-            return Intent(ServiceActions.CONNECTION_ACTIVE)
+            return Intent(ServiceActions.Responses.CONNECTION_ACTIVE)
         } else {
-            return Intent(ServiceActions.CONNECTION_NOT_ACTIVE)
+            return Intent(ServiceActions.Responses.CONNECTION_NOT_ACTIVE)
         }
     }
 
