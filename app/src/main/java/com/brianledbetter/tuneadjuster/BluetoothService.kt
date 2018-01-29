@@ -11,24 +11,13 @@ import android.os.Messenger
 import com.brianledbetter.tuneadjuster.elm327.BluetoothThread
 import android.app.PendingIntent
 
-
-
 class BluetoothService: Service() {
-    companion object {
-        const val SERVICE_ID = 1234
-        const val SOCKET_CLOSED = "SocketClosed"
-        const val START_CONNECTION = "StartConnection"
-        const val GET_CONNECTION_STATUS = "GetConnectionStatus"
-        const val CONNECTION_ACTIVE = "ConnectionActive"
-        const val CONNECTION_NOT_ACTIVE = "ConnectionNotActive"
-        const val STOP_CONNECTION = "StopConnection"
-    }
     private var btThread : BluetoothThread? = null
     private var threadMessenger : Messenger? = null
     private val messageToActivityHandler = Handler() { message ->
         val messageIntent = message.obj as Intent
         threadMessenger?.send(messageWithIntent(messageIntent))
-        if (messageIntent.action == SOCKET_CLOSED) {
+        if (messageIntent.action == ServiceActions.SOCKET_CLOSED) {
             btThread = null
         }
         true
@@ -42,7 +31,7 @@ class BluetoothService: Service() {
         }
 
         when (messageIntent.action) {
-            START_CONNECTION -> {
+            ServiceActions.START_CONNECTION -> {
                 val selectedDevice = messageIntent?.getStringExtra("BluetoothDevice")
                 val b = BluetoothAdapter.getDefaultAdapter()
                 val bluetoothDevice = b.getRemoteDevice(selectedDevice)
@@ -50,7 +39,7 @@ class BluetoothService: Service() {
                 btThread?.start()
                 threadMessenger?.send(messageWithIntent(getStatusIntent()))
             }
-            GET_CONNECTION_STATUS -> {
+            ServiceActions.GET_CONNECTION_STATUS -> {
                 threadMessenger?.send(messageWithIntent(getStatusIntent()))
             }
             else -> { // Forward on to connection thread
@@ -64,9 +53,9 @@ class BluetoothService: Service() {
 
     private fun getStatusIntent() : Intent {
         if (btThread != null) {
-            return Intent(CONNECTION_ACTIVE)
+            return Intent(ServiceActions.CONNECTION_ACTIVE)
         } else {
-            return Intent(CONNECTION_NOT_ACTIVE)
+            return Intent(ServiceActions.CONNECTION_NOT_ACTIVE)
         }
     }
 
@@ -87,7 +76,7 @@ class BluetoothService: Service() {
                 .setContentIntent(pendingIntent)
                 .setTicker(getText(R.string.ticker_text))
                 .build()
-        startForeground(SERVICE_ID, notification)
+        startForeground(ServiceActions.SERVICE_ID, notification)
     }
 
     override fun onBind(intent: Intent?): IBinder {
