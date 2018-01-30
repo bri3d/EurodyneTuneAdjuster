@@ -170,6 +170,12 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
         serviceMessenger?.send(messageWithIntent(connectIntent))
     }
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+        val serviceIntent = Intent(this, BluetoothService::class.java)
+        stopService(serviceIntent)
+    }
+
     private fun messageWithIntent(i : Intent) : Message {
         val message = Message()
         message.obj = i
