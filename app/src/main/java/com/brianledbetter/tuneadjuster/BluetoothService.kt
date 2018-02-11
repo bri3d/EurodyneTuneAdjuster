@@ -75,13 +75,11 @@ class BluetoothService: Service() {
         // Android continues to be the worst development platform in history
         val channelId = "ed_tune_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val mNotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val name = getString(R.string.channel_name)
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val channel = NotificationChannel(channelId, getString(R.string.channel_name), NotificationManager.IMPORTANCE_HIGH)
             val description = getString(R.string.channel_description)
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val mChannel = NotificationChannel(channelId, name, importance)
-            mChannel.description = description
-            mNotificationManager.createNotificationChannel(mChannel)
+            channel.description = description
+            notificationManager.createNotificationChannel(channel)
         }
         val notification = Notification.Builder(this, channelId)
                 .setContentTitle(getText(R.string.notification_title))

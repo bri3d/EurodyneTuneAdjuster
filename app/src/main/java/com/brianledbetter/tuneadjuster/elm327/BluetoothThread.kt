@@ -92,7 +92,11 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMes
         mainMessenger.send(connectedMessage)
 
         while(!Thread.interrupted()) {
-            Thread.sleep(WAKEUP_DELAY_MS)
+            try {
+                Thread.sleep(WAKEUP_DELAY_MS)
+            } catch (e : InterruptedException) {
+                break
+            }
         }
         cancel()
     }

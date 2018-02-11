@@ -1,6 +1,7 @@
 package com.brianledbetter.tuneadjuster.elm327
 
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.io.InputStream
 import java.util.concurrent.CompletableFuture
 
@@ -55,9 +56,16 @@ class ElmIOReactor(private val inStream : InputStream) : Thread("ElmIOReactor") 
     private fun readUntilCharacter(character : String) : String {
         val buffer = StringBuilder()
         while(!Thread.interrupted()) {
-            val byte = inStream.read()
-            if (byte.toChar() == character.toCharArray()[0]) break
-            buffer.append(byte.toChar())
+            try {
+                val byte = inStream.read()
+                if (byte.toChar() == character.toCharArray()[0]) break
+                buffer.append(byte.toChar())
+            } catch (e : IOException) {
+                return ""
+            } catch (e : InterruptedException) {
+                return ""
+            }
+
         }
         return buffer.toString()
     }

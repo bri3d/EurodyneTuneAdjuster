@@ -108,7 +108,7 @@ class EurodyneIO() {
 
     fun setOctaneInfo(io : ElmIO, octane : Int) {
         val octaneByteString = String.format("%02x", octane.toUbyte().toByte())
-        io.writeBytesBlocking("2E F1 F0 " + octaneByteString, {_ ->})
+        io.writeBytesBlocking("2E F1 F9 " + octaneByteString, {_ ->})
 
     }
 
