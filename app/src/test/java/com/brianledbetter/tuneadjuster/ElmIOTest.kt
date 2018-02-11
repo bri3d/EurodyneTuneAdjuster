@@ -14,8 +14,10 @@ import java.io.PipedOutputStream
 class ElmIOTest {
     class FixtureOutputStream : OutputStream() {
         val fixtureArray = mutableListOf<Byte>()
+        var writeCallback : ((Int) -> Unit)? = null
         override fun write(b: Int) {
             fixtureArray.add(b.toByte())
+            writeCallback?.invoke(b)
         }
     }
 
@@ -24,6 +26,9 @@ class ElmIOTest {
         val testInStream = PipedInputStream()
         var inStreamOut = PipedOutputStream(testInStream)
         val testOutStream = FixtureOutputStream()
+        testOutStream.writeCallback = {_ ->
+            inStreamOut.write("00 01 02 10\r >".toByteArray())
+        }
         val elmIO = ElmIO(testInStream, testOutStream)
         var testBytes = byteArrayOf()
         val elmThread = Thread {
@@ -36,10 +41,6 @@ class ElmIOTest {
             })
         }
         readThread.start()
-        val writeThread = Thread {
-            inStreamOut.write("00 01 02 10 >".toByteArray())
-        }
-        writeThread.start()
         readThread.join()
         Assert.assertEquals(0.toByte(), testBytes[0])
         Assert.assertEquals(1.toByte(), testBytes[1])
@@ -62,10 +63,7 @@ class ElmIOTest {
             elmIO.waitForOk()
         }
         readThread.start()
-        val writeThread = Thread {
-            inStreamOut.write("OK>".toByteArray())
-        }
-        writeThread.start()
+        inStreamOut.write("OK>\r".toByteArray())
         readThread.join()
     }
 
@@ -83,10 +81,7 @@ class ElmIOTest {
             elmIO.waitForOther()
         }
         readThread.start()
-        val writeThread = Thread {
-            inStreamOut.write("NO DATA...>".toByteArray())
-        }
-        writeThread.start()
+        inStreamOut.write("NO DATA...>\r".toByteArray())
         readThread.join()
     }
 

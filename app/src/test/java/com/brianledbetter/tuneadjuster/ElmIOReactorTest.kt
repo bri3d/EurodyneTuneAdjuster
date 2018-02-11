@@ -11,72 +11,52 @@ class ElmIOReactorTest {
     fun okayCalled() {
         val testInStream = ByteArrayInputStream("OK>".toByteArray())
         val reactor = ElmIOReactor(testInStream)
-        var done = false
-        reactor.okHandler = {
-            done = true
-            false
-        }
+        val okFuture = reactor.getNextOkFuture()
         reactor.start()
-        while(!done) Thread.yield()
-        assertEquals(true, done)
+        okFuture.join()
         reactor.interrupt()
     }
     @Test
     fun readBytes() {
-        val testInStream = ByteArrayInputStream("00 01 02 10>".toByteArray())
+        val testInStream = ByteArrayInputStream("00 01 02 10\r20\r>\r".toByteArray())
         val reactor = ElmIOReactor(testInStream)
-        var done = false
-        var testBytes : ByteArray? = null
-        reactor.messageHandler = { bytes ->
-            done = true
-            testBytes = bytes
-            false
-        }
+        val bytesFuture = reactor.getNextMessageFuture()
         reactor.start()
-        while(!done) Thread.yield()
-        assertEquals(0.toByte(), testBytes!![0])
-        assertEquals(1.toByte(), testBytes!![1])
-        assertEquals(2.toByte(), testBytes!![2])
-        assertEquals(16.toByte(), testBytes!![3])
+        val testBytes = bytesFuture.join()
+        assertEquals(0.toByte(), testBytes[0])
+        assertEquals(1.toByte(), testBytes[1])
+        assertEquals(2.toByte(), testBytes[2])
+        assertEquals(16.toByte(), testBytes[3])
+        assertEquals(32.toByte(), testBytes[4])
         reactor.interrupt()
     }
     @Test
     fun readOther() {
         val testInStream = ByteArrayInputStream("NO DATA>".toByteArray())
         val reactor = ElmIOReactor(testInStream)
-        var done = false
-        reactor.otherHandler = {
-            done = true
-            false
-        }
+        val otherFuture = reactor.getNextOtherFuture()
         reactor.start()
-        while(!done) Thread.yield()
-        assertEquals(true, done)
+        assertEquals("NO DATA", otherFuture.join())
         reactor.interrupt()
     }
+
     @Test
     fun readMultiple() {
         val testInStream = ByteArrayInputStream("00 01 02 10>\r03 02 01 00>".toByteArray())
         val reactor = ElmIOReactor(testInStream)
-        var done = false
-        var testBytes : ByteArray? = null
-        reactor.messageHandler = { bytes ->
-            done = true
-            testBytes = bytes
-            false
-        }
+        var future = reactor.getNextMessageFuture()
         reactor.start()
-        while(!done) Thread.yield()
+        var testBytes = future.join()
         assertEquals(0.toByte(), testBytes!![0])
-        assertEquals(1.toByte(), testBytes!![1])
-        assertEquals(2.toByte(), testBytes!![2])
-        assertEquals(16.toByte(), testBytes!![3])
-        done = false
-        while(!done) Thread.yield()
-        assertEquals(3.toByte(), testBytes!![0])
-        assertEquals(2.toByte(), testBytes!![1])
-        assertEquals(1.toByte(), testBytes!![2])
-        assertEquals(0.toByte(), testBytes!![3])
+        assertEquals(1.toByte(), testBytes[1])
+        assertEquals(2.toByte(), testBytes[2])
+        assertEquals(16.toByte(), testBytes[3])
+        future = reactor.getNextMessageFuture()
+        testBytes = future.join()
+        assertEquals(3.toByte(), testBytes[0])
+        assertEquals(2.toByte(), testBytes[1])
+        assertEquals(1.toByte(), testBytes[2])
+        assertEquals(0.toByte(), testBytes[3])
         reactor.interrupt()
     }
 }

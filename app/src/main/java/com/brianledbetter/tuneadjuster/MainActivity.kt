@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.*
 import android.widget.CompoundButton
+import com.brianledbetter.tuneadjuster.elm327.EcuIO
 import com.brianledbetter.tuneadjuster.elm327.EurodyneIO
 
 class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjustedListener, BluetoothPickerDialogFragment.BluetoothDialogListener {
@@ -132,6 +133,11 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
             }
             ServiceActions.Responses.ECU_DATA -> {
                 serviceMessenger?.send(messageWithIntent(Intent(ServiceActions.Requests.FETCH_TUNE_DATA)))
+                val ecuIdData = intent.getParcelableExtra<EcuIO.EcuInfo>("ecuInfo")
+                val ecuIdFragment = EcuIdFragment.newInstance(ecuIdData.swNumber, ecuIdData.swVersion, ecuIdData.vinNumber)
+                supportFragmentManager.beginTransaction()
+                        .replace(R.id.ecuIdFragmentContainer, ecuIdFragment, "ecuId")
+                        .commit()
             }
             ServiceActions.Responses.TUNE_DATA -> {
                 val octaneData = intent.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")

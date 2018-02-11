@@ -3,16 +3,14 @@ package com.brianledbetter.tuneadjuster.elm327
 import java.io.*
 import java.nio.charset.Charset
 
-/**
- * Created by brian.ledbetter on 1/20/18.
- */
-class ElmIO(private val inputStream : InputStream, private val outputStream: OutputStream){
-    val ioReactor = ElmIOReactor(inputStream)
+class ElmIO(private val inputStream : InputStream, private val outputStream: OutputStream) {
+    private val ioReactor = ElmIOReactor(inputStream)
 
     fun start() {
         ioReactor.start()
         try {
             writeString("AT Z") // Reset
+            Thread.sleep(500)
             waitForOther()
             writeString("AT E0") // Disable echo
             waitForOk()
@@ -36,21 +34,11 @@ class ElmIO(private val inputStream : InputStream, private val outputStream: Out
     }
 
     fun waitForOther() {
-        var gotOther = false
-        ioReactor.otherHandler = { _ ->
-            gotOther = true
-            true
-        }
-        while(!gotOther) Thread.yield()
+        ioReactor.getNextOtherFuture().join()
     }
 
     fun waitForOk() {
-        var gotOk = false
-        ioReactor.okHandler = {
-            gotOk = true
-            true
-        }
-        while (!gotOk) Thread.yield()
+       ioReactor.getNextOkFuture().join()
     }
 
     fun writeString(string: String) {
@@ -58,19 +46,12 @@ class ElmIO(private val inputStream : InputStream, private val outputStream: Out
     }
 
     fun writeBytesBlocking(string : String, callback : (bytes : ByteArray?) -> Unit) {
-        var operationReturned = false
-        var returnBytes : ByteArray? = null
-        ioReactor.messageHandler = { bytes ->
-            returnBytes = bytes
-            operationReturned = true
-            true
-        }
+        val messageFuture = ioReactor.getNextMessageFuture()
         try {
             writeString(string)
         } catch (e : IOException) {
             return
         }
-        while (!operationReturned) Thread.yield()
-        callback(returnBytes)
+        callback(messageFuture.join())
     }
 }

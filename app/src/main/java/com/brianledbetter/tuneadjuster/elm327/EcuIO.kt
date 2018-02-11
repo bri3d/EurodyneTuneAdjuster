@@ -40,14 +40,14 @@ class EcuIO() {
         var softwareNumber = ""
         var vinNumber = ""
 
-        io.writeBytesBlocking("F1 88", {bytes ->
-            softwareNumber = String(bytes!!)
+        io.writeBytesBlocking("22 F1 88", {bytes ->
+            softwareNumber = String(bytes!!.drop(3).toByteArray())
         })
-        io.writeBytesBlocking("F1 89", {bytes ->
-            softwareVersion = String(bytes!!)
+        io.writeBytesBlocking("22 F1 89", {bytes ->
+            softwareVersion = String(bytes!!.drop(3).toByteArray())
         })
-        io.writeBytesBlocking("F1 90", {bytes ->
-            vinNumber = String(bytes!!)
+        io.writeBytesBlocking("22 F1 90", {bytes ->
+            vinNumber = String(bytes!!.drop(3).toByteArray())
         })
         return EcuInfo(softwareNumber, softwareVersion, vinNumber)
     }

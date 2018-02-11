@@ -14,5 +14,8 @@
     <string name="notification_title">TuneAdjuster</string>
     <string name="notification_message">Bluetooth Thread Active</string>
     <string name="ticker_text">Connecting to Bluetooth</string>
+    <string name="softwareName">Software Name</string>
+    <string name="softwareVersion">Software Version</string>
+    <string name="vinNumber">VIN</string>
 
 </resources>

@@ -79,6 +79,11 @@ class BluetoothService: Service() {
         startForeground(ServiceActions.SERVICE_ID, notification)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        btThread?.interrupt()
+    }
+
     override fun onBind(intent: Intent?): IBinder {
         return fromActivityMessenger.binder
     }

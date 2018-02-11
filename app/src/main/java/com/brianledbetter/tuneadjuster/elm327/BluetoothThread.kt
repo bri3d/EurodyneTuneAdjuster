@@ -1,5 +1,6 @@
 package com.brianledbetter.tuneadjuster.elm327
 
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothSocket
 import android.bluetooth.BluetoothDevice
 import android.content.ContentValues.TAG
@@ -13,9 +14,10 @@ import java.io.IOException
 import java.util.*
 
 
-class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMessenger : Messenger) : Thread() {
+class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMessenger : Messenger) : Thread("BluetoothMainThread") {
     companion object {
         val MY_UUID : UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb")
+        const val WAKEUP_DELAY_MS : Long = 1000
     }
 
     private val mmSocket: BluetoothSocket?
@@ -66,6 +68,8 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMes
     }
 
     override fun run() {
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        bluetoothAdapter.cancelDiscovery()
         try {
             mmSocket!!.connect()
         } catch (connectException: IOException) {
@@ -88,7 +92,7 @@ class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMes
         mainMessenger.send(connectedMessage)
 
         while(!Thread.interrupted()) {
-            Thread.yield()
+            Thread.sleep(WAKEUP_DELAY_MS)
         }
         cancel()
     }
