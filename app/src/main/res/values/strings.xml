@@ -17,5 +17,6 @@
     <string name="softwareName">Software Name</string>
     <string name="softwareVersion">Software Version</string>
     <string name="vinNumber">VIN</string>
-
+    <string name="channel_name">Eurodyne Tune Adjuster</string>
+    <string name="channel_description">Notification used to keep Bluetooth running.</string>
 </resources>

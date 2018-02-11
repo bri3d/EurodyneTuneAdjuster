@@ -5,11 +5,11 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 27
     defaultConfig {
         applicationId "com.brianledbetter.tuneadjuster"
-        minSdkVersion 24
-        targetSdkVersion 26
+        minSdkVersion 21
+        targetSdkVersion 27
         versionCode 2
         versionName "1.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -24,6 +24,7 @@ android {
 
 dependencies {
     compile 'com.github.kotlin-graphics:kotlin-unsigned:v2.1'
+    compile 'net.sourceforge.streamsupport:streamsupport:1.6.0'
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"

@@ -1,15 +1,17 @@
 package com.brianledbetter.tuneadjuster
 
+import android.annotation.TargetApi
 import android.app.Notification
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
-import android.os.Handler
-import android.os.IBinder
-import android.os.Message
-import android.os.Messenger
 import com.brianledbetter.tuneadjuster.elm327.BluetoothThread
 import android.app.PendingIntent
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.*
+
 
 class BluetoothService: Service() {
     private var btThread : BluetoothThread? = null
@@ -65,11 +67,23 @@ class BluetoothService: Service() {
         return message
     }
 
+    @TargetApi(Build.VERSION_CODES.O)
     override fun onCreate() {
         super.onCreate()
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
-        val notification = Notification.Builder(this)
+        // Android continues to be the worst development platform in history
+        val channelId = "ed_tune_channel"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val mNotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val name = getString(R.string.channel_name)
+            val description = getString(R.string.channel_description)
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val mChannel = NotificationChannel(channelId, name, importance)
+            mChannel.description = description
+            mNotificationManager.createNotificationChannel(mChannel)
+        }
+        val notification = Notification.Builder(this, channelId)
                 .setContentTitle(getText(R.string.notification_title))
                 .setContentText(getText(R.string.notification_message))
                 .setSmallIcon(R.mipmap.app_icon)
