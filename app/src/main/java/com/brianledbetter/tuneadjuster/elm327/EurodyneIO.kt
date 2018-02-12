@@ -71,27 +71,27 @@ class EurodyneIO {
     }
 
     fun getOctaneInfo(io : UDSIO) : OctaneInfo {
-        val minOctane = io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x32.toUByte())).thenApply(::getFirstByteOrZero).join()
-        val maxOctane = io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x33.toUByte())).thenApply(::getFirstByteOrZero).join()
-        val currentOctane = io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF9.toUByte())).thenApply(::getFirstByteOrZero).join()
+        val minOctane = io.readLocalIdentifier(0xFD, 0x32).thenApply(::getFirstByteOrZero).join()
+        val maxOctane = io.readLocalIdentifier(0xFD, 0x33).thenApply(::getFirstByteOrZero).join()
+        val currentOctane = io.readLocalIdentifier(0xF1, 0xF9).thenApply(::getFirstByteOrZero).join()
         return OctaneInfo(minOctane, maxOctane, currentOctane)
     }
 
     fun getBoostInfo(io : UDSIO) : BoostInfo {
-        val minBoost = io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x30.toUByte())).thenApply(::getFirstUByteOrZero).thenApply(::calculateBoost).join()
-        val maxBoost = io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x31.toUByte())).thenApply(::getFirstUByteOrZero).thenApply(::calculateBoost).join()
-        val currentBoost = io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF8.toUByte())).thenApply(::getFirstUByteOrZero).thenApply(::calculateBoost).join()
+        val minBoost = io.readLocalIdentifier(0xFD, 0x30).thenApply(::getFirstUByteOrZero).thenApply(::calculateBoost).join()
+        val maxBoost = io.readLocalIdentifier(0xFD, 0x31).thenApply(::getFirstUByteOrZero).thenApply(::calculateBoost).join()
+        val currentBoost = io.readLocalIdentifier(0xF1, 0xF8).thenApply(::getFirstUByteOrZero).thenApply(::calculateBoost).join()
 
         return BoostInfo(minBoost, maxBoost, currentBoost)
     }
 
     fun setBoostInfo(io : UDSIO, boost : Int) {
         val writeBoostByte = calculateWriteBoost(boost)
-        io.writeLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF8.toUByte()), byteArrayOf(writeBoostByte.toByte())).join()
+        io.writeLocalIdentifier(intArrayOf(0xF1, 0xF8), byteArrayOf(writeBoostByte.toByte())).join()
     }
 
     fun setOctaneInfo(io : UDSIO, octane : Int) {
-        io.writeLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF9.toUByte()), byteArrayOf(octane.toUByte())).join()
+        io.writeLocalIdentifier(intArrayOf(0xF1, 0xF9), byteArrayOf(octane.toUByte())).join()
 
     }
 

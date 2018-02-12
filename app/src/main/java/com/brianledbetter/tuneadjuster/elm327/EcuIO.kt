@@ -40,9 +40,9 @@ class EcuIO {
     }
 
     fun getEcuInfo(io : UDSIO) : EcuInfo {
-        val softwareNumber = io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0x88.toUByte())).thenApply(::returnToString).join()
-        val softwareVersion = io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0x89.toUByte())).thenApply(::returnToString).join()
-        val vinNumber = io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0x90.toUByte())).thenApply(::returnToString).join()
+        val softwareNumber = io.readLocalIdentifier(0xF1, 0x88).thenApply(::returnToString).join()
+        val softwareVersion = io.readLocalIdentifier(0xF1, 0x89).thenApply(::returnToString).join()
+        val vinNumber = io.readLocalIdentifier(0xF1, 0x90).thenApply(::returnToString).join()
 
         return EcuInfo(softwareNumber, softwareVersion, vinNumber)
     }

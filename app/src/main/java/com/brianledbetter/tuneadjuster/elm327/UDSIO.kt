@@ -2,25 +2,32 @@ package com.brianledbetter.tuneadjuster.elm327
 
 import java.io.ByteArrayOutputStream
 import java8.util.concurrent.CompletableFuture
+import unsigned.toUByte
 
 
 /**
  * Created by brian.ledbetter on 2/11/18.
  */
 class UDSIO(val io : ElmIO) {
-    fun readLocalIdentifier(identifier: ByteArray) : CompletableFuture<ByteArray> {
+    private fun intArrayToUnsigned(input : IntArray) : ByteArray {
+        return input.map { i ->
+            i.toUByte()
+        }.toByteArray()
+    }
+
+    fun readLocalIdentifier(vararg identifier: Int) : CompletableFuture<ByteArray> {
         val bytes = ByteArrayOutputStream()
         bytes.write(0x22)
-        bytes.write(identifier)
+        bytes.write(intArrayToUnsigned(identifier))
         return io.writeBytesBlocking(bytes.toByteArray()).thenApply { readBytes ->
             readBytes?.drop(3)?.toByteArray()
         }
     }
 
-    fun writeLocalIdentifier(identifier: ByteArray, value: ByteArray) : CompletableFuture<ByteArray> {
+    fun writeLocalIdentifier(identifier: IntArray, value: ByteArray) : CompletableFuture<ByteArray> {
         val bytes = ByteArrayOutputStream()
         bytes.write(0x2E)
-        bytes.write(identifier)
+        bytes.write(intArrayToUnsigned(identifier))
         bytes.write(value)
         return io.writeBytesBlocking(bytes.toByteArray()).thenApply { readBytes ->
             readBytes?.drop(3)?.toByteArray()
