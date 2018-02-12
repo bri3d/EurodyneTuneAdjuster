@@ -2,13 +2,9 @@ package com.brianledbetter.tuneadjuster
 
 object HexUtil {
     fun bytesToHexString(bytes: ByteArray): String {
-        // ELM takes ASCII encoded bytes
-        val sb = StringBuilder(bytes.size * 3 + 1)
-        for (b in bytes) {
-            sb.append(String.format("%02X ", b))
-        }
-        sb.append("\r")
-        return sb.toString()
+        return bytes.joinToString(" ") { b ->
+            String.format("%02X", b)
+        } + "\r"
     }
 
     fun bytesToInt(bytes: ByteArray): Int {

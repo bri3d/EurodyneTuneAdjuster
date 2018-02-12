@@ -6,7 +6,7 @@ package com.brianledbetter.tuneadjuster.elm327
 
 class ListQueue<T> {
 
-    private var items = mutableListOf<T>()
+    private val items = mutableListOf<T>()
 
     fun isEmpty() = this.items.isEmpty()
 

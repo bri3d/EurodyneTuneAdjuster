@@ -12,9 +12,9 @@ class ElmIOReactor(private val inStream : InputStream) : Thread("ElmIOReactor") 
     companion object {
         const val TERMINAL = ">"
     }
-    private var okHandlers = ListQueue<CompletableFuture<Boolean>>()
-    private var messageHandlers = ListQueue<CompletableFuture<ByteArray>>()
-    private var otherHandlers = ListQueue<CompletableFuture<String>>()
+    private val okHandlers = ListQueue<CompletableFuture<Boolean>>()
+    private val messageHandlers = ListQueue<CompletableFuture<ByteArray>>()
+    private val otherHandlers = ListQueue<CompletableFuture<String>>()
     private val whitespaceRegex = "\\s".toRegex()
     private val byteRegex = "([0-9A-F])+".toRegex()
 
@@ -77,13 +77,8 @@ class ElmIOReactor(private val inStream : InputStream) : Thread("ElmIOReactor") 
         if (!strippedByteLine.matches(byteRegex)) { // Check for hexish-ness
             return ByteArray(0)
         }
-        val len = strippedByteLine.length
-        val data = ByteArray(len / 2)
-        var i = 0
-        while (i < len - 1) {
-            data[i / 2] = ((Character.digit(strippedByteLine[i], 16) shl 4) + Character.digit(strippedByteLine[i + 1], 16)).toByte()
-            i += 2
-        }
-        return data
+        return strippedByteLine.withIndex().groupBy { it.index / 2 }.values.map {it ->
+           ((Character.digit(it.first().value, 16) shl 4) + Character.digit(it.last().value, 16)).toByte()
+        }.toByteArray()
     }
 }
