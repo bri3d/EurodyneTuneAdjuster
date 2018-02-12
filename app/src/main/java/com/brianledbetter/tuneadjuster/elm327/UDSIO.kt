@@ -8,7 +8,7 @@ import unsigned.toUByte
 /**
  * Created by brian.ledbetter on 2/11/18.
  */
-class UDSIO(val io : ElmIO) {
+class UDSIO(private val io : ElmIO) {
     private fun intArrayToUnsigned(input : IntArray) : ByteArray {
         return input.map { i ->
             i.toUByte()

@@ -29,29 +29,15 @@ class BluetoothThread(mmDevice: BluetoothDevice, private val mainMessenger : Mes
                 if (elmIO != null) {
                     val boost: EurodyneIO.BoostInfo = intent.getParcelableExtra("BoostInfo")
                     val octane: EurodyneIO.OctaneInfo = intent.getParcelableExtra("OctaneInfo")
-                    val edIo = EurodyneIO()
-                    val elmIO = elmIO!!
-                    val udsIO = UDSIO(elmIO)
-                    edIo.setBoostInfo(udsIO, boost.current)
-                    edIo.setOctaneInfo(udsIO, octane.current)
-                    fetchTuneInfo(elmIO)
+                    val edIo = EurodyneIO(UDSIO(elmIO!!))
+                    edIo.setBoostInfo(boost.current)
+                    edIo.setOctaneInfo(octane.current)
+                    fetchTuneInfo()
                 }
             }
-            ServiceActions.Requests.FETCH_TUNE_DATA -> {
-                if (elmIO != null) {
-                    val elmIO = elmIO!!
-                    fetchTuneInfo(elmIO)
-                }
-            }
-            ServiceActions.Requests.FETCH_ECU_DATA -> {
-                if (elmIO != null) {
-                    val elmIO = elmIO!!
-                    fetchEcuInfo(elmIO)
-                }
-            }
-            ServiceActions.Requests.STOP_CONNECTION -> {
-                cancel()
-            }
+            ServiceActions.Requests.FETCH_TUNE_DATA -> fetchTuneInfo()
+            ServiceActions.Requests.FETCH_ECU_DATA -> fetchEcuInfo()
+            ServiceActions.Requests.STOP_CONNECTION -> cancel()
         }
         true
     })
@@ -102,11 +88,10 @@ class BluetoothThread(mmDevice: BluetoothDevice, private val mainMessenger : Mes
         mainMessenger.send(closeMessage)
     }
 
-    private fun fetchTuneInfo(elmIO : ElmIO) {
-        val edIo = EurodyneIO()
-        val udsIo = UDSIO(elmIO)
-        val octaneInfo = edIo.getOctaneInfo(udsIo)
-        val boostInfo = edIo.getBoostInfo(udsIo)
+    private fun fetchTuneInfo() {
+        val edIo = EurodyneIO(UDSIO(elmIO!!))
+        val octaneInfo = edIo.getOctaneInfo()
+        val boostInfo = edIo.getBoostInfo()
         val message = Message()
         val tuneIntent = Intent(ServiceActions.Responses.TUNE_DATA)
         tuneIntent.putExtra("boostInfo", boostInfo)
@@ -115,10 +100,9 @@ class BluetoothThread(mmDevice: BluetoothDevice, private val mainMessenger : Mes
         mainMessenger.send(message)
     }
 
-    private fun fetchEcuInfo(elmIO : ElmIO) {
-        val ecuIO = EcuIO()
-        val udsIO = UDSIO(elmIO)
-        val ecuInfo = ecuIO.getEcuInfo(udsIO)
+    private fun fetchEcuInfo() {
+        val ecuIO = EcuIO(UDSIO(elmIO!!))
+        val ecuInfo = ecuIO.getEcuInfo()
         val message = Message()
         val ecuIntent = Intent(ServiceActions.Responses.ECU_DATA)
         ecuIntent.putExtra("ecuInfo", ecuInfo)

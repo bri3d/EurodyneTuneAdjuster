@@ -2,12 +2,11 @@ package com.brianledbetter.tuneadjuster.elm327
 
 import android.os.Parcel
 import android.os.Parcelable
-import unsigned.toUByte
 
 /**
  * Created by brian.ledbetter on 1/28/18.
  */
-class EcuIO {
+class EcuIO(private val udsIo : UDSIO) {
     data class EcuInfo(val swNumber: String, val swVersion: String, val vinNumber: String) : Parcelable {
         constructor(parcel: Parcel) : this(
                 parcel.readString(),
@@ -39,10 +38,10 @@ class EcuIO {
         return String(bytes!!)
     }
 
-    fun getEcuInfo(io : UDSIO) : EcuInfo {
-        val softwareNumber = io.readLocalIdentifier(0xF1, 0x88).thenApply(::returnToString).join()
-        val softwareVersion = io.readLocalIdentifier(0xF1, 0x89).thenApply(::returnToString).join()
-        val vinNumber = io.readLocalIdentifier(0xF1, 0x90).thenApply(::returnToString).join()
+    fun getEcuInfo() : EcuInfo {
+        val softwareNumber = udsIo.readLocalIdentifier(0xF1, 0x88).thenApply(::returnToString).join()
+        val softwareVersion = udsIo.readLocalIdentifier(0xF1, 0x89).thenApply(::returnToString).join()
+        val vinNumber = udsIo.readLocalIdentifier(0xF1, 0x90).thenApply(::returnToString).join()
 
         return EcuInfo(softwareNumber, softwareVersion, vinNumber)
     }
