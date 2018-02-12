@@ -14,7 +14,7 @@ import java.io.IOException
 import java.util.*
 
 
-class BluetoothThread(private val mmDevice: BluetoothDevice, private val mainMessenger : Messenger) : Thread("BluetoothMainThread") {
+class BluetoothThread(mmDevice: BluetoothDevice, private val mainMessenger : Messenger) : Thread("BluetoothMainThread") {
     companion object {
         val MY_UUID : UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb")
         const val WAKEUP_DELAY_MS : Long = 1000

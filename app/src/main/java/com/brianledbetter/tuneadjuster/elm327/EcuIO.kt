@@ -6,13 +6,12 @@ import android.os.Parcelable
 /**
  * Created by brian.ledbetter on 1/28/18.
  */
-class EcuIO() {
+class EcuIO {
     data class EcuInfo(val swNumber: String, val swVersion: String, val vinNumber: String) : Parcelable {
         constructor(parcel: Parcel) : this(
                 parcel.readString(),
                 parcel.readString(),
-                parcel.readString()) {
-        }
+                parcel.readString())
 
         override fun writeToParcel(parcel: Parcel, flags: Int) {
             parcel.writeString(swNumber)

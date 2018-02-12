@@ -16,7 +16,7 @@ import android.os.*
 class BluetoothService: Service() {
     private var btThread : BluetoothThread? = null
     private var threadMessenger : Messenger? = null
-    private val messageToActivityHandler = Handler() { message ->
+    private val messageToActivityHandler = Handler { message ->
         val messageIntent = message.obj as Intent
         threadMessenger?.send(messageWithIntent(messageIntent))
         if (messageIntent.action == ServiceActions.Responses.SOCKET_CLOSED) {
@@ -25,7 +25,7 @@ class BluetoothService: Service() {
         true
     }
 
-    private val fromActivityMessenger = Messenger(Handler() { message ->
+    private val fromActivityMessenger = Messenger(Handler { message ->
         val messageIntent = message.obj as Intent
 
         if (message.replyTo != null) {
@@ -54,10 +54,10 @@ class BluetoothService: Service() {
     })
 
     private fun getStatusIntent() : Intent {
-        if (btThread != null) {
-            return Intent(ServiceActions.Responses.CONNECTION_ACTIVE)
+        return if (btThread != null) {
+            Intent(ServiceActions.Responses.CONNECTION_ACTIVE)
         } else {
-            return Intent(ServiceActions.Responses.CONNECTION_NOT_ACTIVE)
+            Intent(ServiceActions.Responses.CONNECTION_NOT_ACTIVE)
         }
     }
 

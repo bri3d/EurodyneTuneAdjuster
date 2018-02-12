@@ -4,9 +4,9 @@ package com.brianledbetter.tuneadjuster.elm327
  * Created by brian.ledbetter on 2/11/18.
  */
 
-class ListQueue<T>(){
+class ListQueue<T> {
 
-    var items = mutableListOf<T>()
+    private var items = mutableListOf<T>()
 
     fun isEmpty() = this.items.isEmpty()
 
@@ -19,10 +19,10 @@ class ListQueue<T>(){
     }
 
     fun dequeue():T?{
-        if (this.isEmpty()){
-            return null
+        return if (this.isEmpty()){
+            null
         } else {
-            return this.items.removeAt(0)
+            this.items.removeAt(0)
         }
     }
 

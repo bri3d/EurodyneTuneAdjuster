@@ -94,7 +94,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
         val devices = b.bondedDevices.toTypedArray()
         if (devices.isNotEmpty()) {
             val bpdf = BluetoothPickerDialogFragment()
-            bpdf.mPossibleDevices = devices as Array<Parcelable>
+            bpdf.mPossibleDevices = devices
             bpdf.show(fragmentManager, "BluetoothPickerDialogFragment")
         } else {
             Toast.makeText(applicationContext, "ERROR! " + "No Bluetooth Device available!", Toast.LENGTH_LONG).show()

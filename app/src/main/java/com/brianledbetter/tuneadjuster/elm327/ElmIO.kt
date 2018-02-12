@@ -41,10 +41,6 @@ class ElmIO(private val inputStream : InputStream, private val outputStream: Out
        ioReactor.getNextOkFuture().join()
     }
 
-    fun writeString(string: String) {
-        outputStream.write((string + "\r").toByteArray(Charset.forName("US-ASCII")))
-    }
-
     fun writeBytesBlocking(string : String, callback : (bytes : ByteArray?) -> Unit) {
         val messageFuture = ioReactor.getNextMessageFuture()
         try {
@@ -53,5 +49,9 @@ class ElmIO(private val inputStream : InputStream, private val outputStream: Out
             return
         }
         callback(messageFuture.join())
+    }
+
+    private fun writeString(string: String) {
+        outputStream.write((string + "\r").toByteArray(Charset.forName("US-ASCII")))
     }
 }

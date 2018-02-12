@@ -3,16 +3,18 @@ package com.brianledbetter.tuneadjuster.elm327
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
-import java.util.concurrent.CompletableFuture
+import java8.util.concurrent.CompletableFuture
 
 /**
  * Created by brian.ledbetter on 1/20/18.
  */
 class ElmIOReactor(private val inStream : InputStream) : Thread("ElmIOReactor") {
-    private val Terminal = ">"
-    var okHandlers = ListQueue<CompletableFuture<Boolean>>()
-    var messageHandlers = ListQueue<CompletableFuture<ByteArray>>()
-    var otherHandlers = ListQueue<CompletableFuture<String>>()
+    companion object {
+        const val TERMINAL = ">"
+    }
+    private var okHandlers = ListQueue<CompletableFuture<Boolean>>()
+    private var messageHandlers = ListQueue<CompletableFuture<ByteArray>>()
+    private var otherHandlers = ListQueue<CompletableFuture<String>>()
     private val whitespaceRegex = "\\s".toRegex()
     private val byteRegex = "([0-9A-F])+".toRegex()
 
@@ -36,7 +38,7 @@ class ElmIOReactor(private val inStream : InputStream) : Thread("ElmIOReactor") 
 
     override fun run() {
         while(!Thread.interrupted()) {
-            val currentLines = readUntilCharacter(Terminal).split("\r")
+            val currentLines = readUntilCharacter(TERMINAL).split("\r")
             val byteOutputStream = ByteArrayOutputStream()
             currentLines.forEach { currentLine ->
                 when {

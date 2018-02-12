@@ -5,19 +5,16 @@ import android.os.Parcelable
 import unsigned.Ubyte
 import unsigned.toUInt
 import unsigned.toUbyte
-import java.io.IOException
-
 
 /**
  * Created by brian.ledbetter on 1/20/18.
  */
-class EurodyneIO() {
+class EurodyneIO {
     data class OctaneInfo(val minimum: Int, val maximum: Int, val current: Int) : Parcelable {
         constructor(parcel: Parcel) : this(
                 parcel.readInt(),
                 parcel.readInt(),
-                parcel.readInt()) {
-        }
+                parcel.readInt())
 
         override fun writeToParcel(parcel: Parcel, flags: Int) {
             parcel.writeInt(minimum)
@@ -44,8 +41,7 @@ class EurodyneIO() {
         constructor(parcel: Parcel) : this(
                 parcel.readInt(),
                 parcel.readInt(),
-                parcel.readInt()) {
-        }
+                parcel.readInt())
 
         override fun writeToParcel(parcel: Parcel, flags: Int) {
             parcel.writeInt(minimum)
@@ -102,7 +98,7 @@ class EurodyneIO() {
 
     fun setBoostInfo(io : ElmIO, boost : Int) {
         val writeBoostByte = calculateWriteBoost(boost)
-        val boostByteString = String.format("%02x", writeBoostByte.toByte());
+        val boostByteString = String.format("%02x", writeBoostByte.toByte())
         io.writeBytesBlocking("2E F1 F8 " + boostByteString, {_ ->})
     }
 
@@ -112,14 +108,14 @@ class EurodyneIO() {
 
     }
 
-    fun calculateWriteBoost(psi: Int) : Ubyte {
+    private fun calculateWriteBoost(psi: Int) : Ubyte {
         val offsetPsi = psi + 16
         val num = (offsetPsi.toDouble() / 0.014503773773).toInt()
         val num2 = (num.toDouble() * 0.047110065099374217).toInt()
         return num2.toUbyte()
     }
 
-    fun calculateBoost(boost : Ubyte) : Int {
+    private fun calculateBoost(boost : Ubyte) : Int {
         val num = (boost.toDouble() / 0.047110065099374217).toInt()
         val num2 = (num.toDouble() * 0.014503773773).toInt()
         return num2 - 15

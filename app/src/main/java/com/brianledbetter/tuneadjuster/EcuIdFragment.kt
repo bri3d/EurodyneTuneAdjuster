@@ -18,23 +18,23 @@ class EcuIdFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (arguments != null) {
-            swNumber = arguments.getString(ARG_SOFTWARE_NUMBER)
-            swVersion = arguments.getString(ARG_SOFTWARE_VERSION)
-            vin = arguments.getString(ARG_VIN_NUMBER)
+            swNumber = arguments?.getString(ARG_SOFTWARE_NUMBER)
+            swVersion = arguments?.getString(ARG_SOFTWARE_VERSION)
+            vin = arguments?.getString(ARG_VIN_NUMBER)
         }
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         this.softwareName.text = swNumber
         this.softwareVersion.text = swVersion
         this.vinNumber.text = vin
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        return inflater!!.inflate(R.layout.fragment_ecu_id, container, false)
+        return inflater.inflate(R.layout.fragment_ecu_id, container, false)
     }
 
     companion object {

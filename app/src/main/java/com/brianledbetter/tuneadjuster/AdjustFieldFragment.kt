@@ -22,20 +22,20 @@ class AdjustFieldFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (arguments != null) {
-            minValue = arguments.getInt(ARG_MIN_VALUE)
-            maxValue = arguments.getInt(ARG_MAX_VALUE)
-            originalValue = arguments.getInt(ARG_ORIGINAL_VALUE)
-            title = arguments.getString(ARG_TITLE)
+            minValue = arguments?.getInt(ARG_MIN_VALUE)
+            maxValue = arguments?.getInt(ARG_MAX_VALUE)
+            originalValue = arguments?.getInt(ARG_ORIGINAL_VALUE)
+            title = arguments?.getString(ARG_TITLE)
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        return inflater!!.inflate(R.layout.fragment_adjust_field, container, false)
+        return inflater.inflate(R.layout.fragment_adjust_field, container, false)
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         this.valueBar.setOnSeekBarChangeListener(this)
 
@@ -68,12 +68,6 @@ class AdjustFieldFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
         mListener?.onParameterAdjusted(title ?: "", realValue)
     }
 
-    fun setValueFromData(value: Int) {
-        this.rawValue?.text = value.toString()
-        this.valueBar?.progress = value - (minValue ?: 0)
-        this.rawValue?.setTextColor(Color.BLACK)
-    }
-
     override fun onStartTrackingTouch(p0: SeekBar?) {
 
     }
@@ -87,10 +81,10 @@ class AdjustFieldFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
     }
 
     companion object {
-        private val ARG_MIN_VALUE = "minValue"
-        private val ARG_MAX_VALUE = "maxValue"
-        private val ARG_ORIGINAL_VALUE = "originalValue"
-        private val ARG_TITLE = "title"
+        const val ARG_MIN_VALUE = "minValue"
+        const val ARG_MAX_VALUE = "maxValue"
+        const val ARG_ORIGINAL_VALUE = "originalValue"
+        const val ARG_TITLE = "title"
 
         fun newInstance(minValue: Int, maxValue: Int, originalValue: Int, title: String): AdjustFieldFragment {
             val fragment = AdjustFieldFragment()

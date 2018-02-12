@@ -3,7 +3,6 @@ package com.brianledbetter.tuneadjuster
 import com.brianledbetter.tuneadjuster.elm327.ElmIO
 import org.junit.Assert
 import org.junit.Test
-import java.io.ByteArrayInputStream
 import java.io.OutputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
@@ -13,7 +12,7 @@ import java.io.PipedOutputStream
  */
 class ElmIOTest {
     class FixtureOutputStream : OutputStream() {
-        val fixtureArray = mutableListOf<Byte>()
+        private val fixtureArray = mutableListOf<Byte>()
         var writeCallback : ((Int) -> Unit)? = null
         override fun write(b: Int) {
             fixtureArray.add(b.toByte())
@@ -24,7 +23,7 @@ class ElmIOTest {
     @Test
     fun writeBlockingTest() {
         val testInStream = PipedInputStream()
-        var inStreamOut = PipedOutputStream(testInStream)
+        val inStreamOut = PipedOutputStream(testInStream)
         val testOutStream = FixtureOutputStream()
         testOutStream.writeCallback = {_ ->
             inStreamOut.write("00 01 02 10\r >".toByteArray())
@@ -52,7 +51,7 @@ class ElmIOTest {
     @Test
     fun waitForOkTest() {
         val testInStream = PipedInputStream()
-        var inStreamOut = PipedOutputStream(testInStream)
+        val inStreamOut = PipedOutputStream(testInStream)
         val testOutStream = FixtureOutputStream()
         val elmIO = ElmIO(testInStream, testOutStream)
         val elmThread = Thread {
@@ -70,7 +69,7 @@ class ElmIOTest {
     @Test
     fun waitForOtherTest() {
         val testInStream = PipedInputStream()
-        var inStreamOut = PipedOutputStream(testInStream)
+        val inStreamOut = PipedOutputStream(testInStream)
         val testOutStream = FixtureOutputStream()
         val elmIO = ElmIO(testInStream, testOutStream)
         val elmThread = Thread {
