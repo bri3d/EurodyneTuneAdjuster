@@ -2,9 +2,7 @@ package com.brianledbetter.tuneadjuster
 
 object HexUtil {
     fun bytesToHexString(bytes: ByteArray): String {
-        return bytes.joinToString(" ") { b ->
-            String.format("%02X", b)
-        } + "\r"
+        return bytes.joinToString(" ") { b -> String.format("%02X", b) }
     }
 
     fun bytesToInt(bytes: ByteArray): Int {
