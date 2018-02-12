@@ -2,10 +2,7 @@ package com.brianledbetter.tuneadjuster.elm327
 
 import android.os.Parcel
 import android.os.Parcelable
-import unsigned.Ubyte
-import unsigned.toUByte
-import unsigned.toUInt
-import unsigned.toUbyte
+import unsigned.*
 
 /**
  * Created by brian.ledbetter on 1/20/18.
@@ -65,47 +62,36 @@ class EurodyneIO {
         }
     }
 
+    fun getFirstByteOrZero(inBytes : ByteArray?) : Int {
+        return inBytes?.get(0)?.toUInt() ?: 0
+    }
+
+    fun getFirstUByteOrZero(inBytes : ByteArray?) : Ubyte {
+        return inBytes?.get(0)?.toUbyte() ?: 0.toUbyte()
+    }
+
     fun getOctaneInfo(io : UDSIO) : OctaneInfo {
-        var minOctane = 0
-        var maxOctane = 0
-        var currentOctane = 0
-        io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x32.toUByte()), { returnBytes ->
-            minOctane = returnBytes?.get(0)?.toUInt() ?: 0
-        })
-        io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x33.toUByte()), { returnBytes ->
-            maxOctane = returnBytes?.get(0)?.toUInt() ?: 0
-        })
-        io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF9.toUByte()), { returnBytes ->
-            currentOctane = returnBytes?.get(0)?.toUInt() ?: 0
-        })
+        val minOctane = io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x32.toUByte())).thenApply(::getFirstByteOrZero).join()
+        val maxOctane = io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x33.toUByte())).thenApply(::getFirstByteOrZero).join()
+        val currentOctane = io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF9.toUByte())).thenApply(::getFirstByteOrZero).join()
         return OctaneInfo(minOctane, maxOctane, currentOctane)
     }
 
     fun getBoostInfo(io : UDSIO) : BoostInfo {
-        var minBoost = 0
-        var maxBoost = 0
-        var currentBoost = 0
-
-        io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x30.toUByte()), { returnBytes ->
-            minBoost = calculateBoost(returnBytes?.get(0)?.toUbyte() ?: 0.toUbyte())
-        })
-        io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x31.toUByte()), { returnBytes ->
-            maxBoost = calculateBoost(returnBytes?.get(0)?.toUbyte() ?: 0.toUbyte())
-        })
-        io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF8.toUByte()), { returnBytes ->
-            currentBoost = calculateBoost(returnBytes?.get(0)?.toUbyte() ?: 0.toUbyte())
-        })
+        val minBoost = io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x30.toUByte())).thenApply(::getFirstUByteOrZero).thenApply(::calculateBoost).join()
+        val maxBoost = io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x31.toUByte())).thenApply(::getFirstUByteOrZero).thenApply(::calculateBoost).join()
+        val currentBoost = io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF8.toUByte())).thenApply(::getFirstUByteOrZero).thenApply(::calculateBoost).join()
 
         return BoostInfo(minBoost, maxBoost, currentBoost)
     }
 
     fun setBoostInfo(io : UDSIO, boost : Int) {
         val writeBoostByte = calculateWriteBoost(boost)
-        io.writeLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF8.toUByte()), byteArrayOf(writeBoostByte.toByte()), { _ -> })
+        io.writeLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF8.toUByte()), byteArrayOf(writeBoostByte.toByte())).join()
     }
 
     fun setOctaneInfo(io : UDSIO, octane : Int) {
-        io.writeLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF9.toUByte()), byteArrayOf(octane.toUByte()), { _ -> })
+        io.writeLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF9.toUByte()), byteArrayOf(octane.toUByte())).join()
 
     }
 

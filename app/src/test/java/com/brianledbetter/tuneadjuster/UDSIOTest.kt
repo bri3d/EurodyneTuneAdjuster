@@ -18,15 +18,12 @@ class UDSIOTest {
         val inStreamOut = PipedOutputStream(testInStream)
         val testOutStream = FixtureOutputStream()
         val elmIO = ElmIO(testInStream, testOutStream)
-        var testBytes = byteArrayOf()
         val elmThread = Thread {
             elmIO.start()
         }
         elmThread.start()
         val udsIo = UDSIO(elmIO)
-        udsIo.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0x90.toUByte()), { bytes ->
-            testBytes = bytes!!
-        })
+        val testBytes = udsIo.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0x90.toUByte())).join()
         inStreamOut.write(byteArrayOf(0, 0, 0, 0xFF.toUByte(), ">".toCharArray()[0].toByte()))
         Assert.assertTrue(String(testOutStream.fixtureArrayAsBytes()).contains("22 F1 90"))
         Assert.assertEquals(255.toUByte(), testBytes[0])

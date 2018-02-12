@@ -3,6 +3,7 @@ package com.brianledbetter.tuneadjuster.elm327
 import com.brianledbetter.tuneadjuster.HexUtil
 import java.io.*
 import java.nio.charset.Charset
+import java8.util.concurrent.CompletableFuture
 
 class ElmIO(private val inputStream : InputStream, private val outputStream: OutputStream) {
     private val ioReactor = ElmIOReactor(inputStream)
@@ -44,18 +45,20 @@ class ElmIO(private val inputStream : InputStream, private val outputStream: Out
        ioReactor.getNextOkFuture().join()
     }
 
-    fun writeBytesBlocking(bytes : ByteArray, callback : (bytes : ByteArray?) -> Unit) {
-        writeStringBlocking(HexUtil.bytesToHexString(bytes), callback)
+    fun writeBytesBlocking(bytes : ByteArray) : CompletableFuture<ByteArray> {
+        return writeStringBlocking(HexUtil.bytesToHexString(bytes))
     }
 
-    fun writeStringBlocking(string : String, callback : (bytes : ByteArray?) -> Unit) {
+    fun writeStringBlocking(string : String) : CompletableFuture<ByteArray> {
         val messageFuture = ioReactor.getNextMessageFuture()
+        val returnFuture = CompletableFuture<ByteArray>()
         try {
             writeString(string)
         } catch (e : IOException) {
-            return
+            returnFuture.completeExceptionally(e)
         }
-        callback(messageFuture.join())
+        returnFuture.complete(messageFuture.join())
+        return returnFuture
     }
 
     private fun writeString(string: String) {

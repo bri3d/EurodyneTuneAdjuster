@@ -20,14 +20,11 @@ class ElmIOTest {
             inStreamOut.write("00 01 02 10\r >".toByteArray())
         }
         val elmIO = ElmIO(testInStream, testOutStream)
-        var testBytes = byteArrayOf()
         val elmThread = Thread {
             elmIO.start()
         }
         elmThread.start()
-        elmIO.writeBytesBlocking(byteArrayOf(0x22, 0xF1.toUByte(), 0x90.toUByte()), { bytes ->
-            testBytes = bytes!!
-        })
+        val testBytes = elmIO.writeBytesBlocking(byteArrayOf(0x22, 0xF1.toUByte(), 0x90.toUByte())).join()
         Assert.assertTrue(String(testOutStream.fixtureArrayAsBytes()).contains("22 F1 90"))
         Assert.assertEquals(0.toByte(), testBytes[0])
         Assert.assertEquals(1.toByte(), testBytes[1])
