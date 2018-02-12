@@ -1,5 +1,6 @@
 package com.brianledbetter.tuneadjuster.elm327
 
+import com.brianledbetter.tuneadjuster.HexUtil
 import java.io.*
 import java.nio.charset.Charset
 
@@ -24,6 +25,8 @@ class ElmIO(private val inputStream : InputStream, private val outputStream: Out
             waitForOk()
         } catch (e : IOException) {
             stop()
+        } catch (e : InterruptedException) {
+            stop()
         }
     }
 
@@ -41,7 +44,11 @@ class ElmIO(private val inputStream : InputStream, private val outputStream: Out
        ioReactor.getNextOkFuture().join()
     }
 
-    fun writeBytesBlocking(string : String, callback : (bytes : ByteArray?) -> Unit) {
+    fun writeBytesBlocking(bytes : ByteArray, callback : (bytes : ByteArray?) -> Unit) {
+        writeStringBlocking(HexUtil.bytesToHexString(bytes), callback)
+    }
+
+    fun writeStringBlocking(string : String, callback : (bytes : ByteArray?) -> Unit) {
         val messageFuture = ioReactor.getNextMessageFuture()
         try {
             writeString(string)

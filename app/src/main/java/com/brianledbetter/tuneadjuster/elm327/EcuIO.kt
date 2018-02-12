@@ -2,6 +2,7 @@ package com.brianledbetter.tuneadjuster.elm327
 
 import android.os.Parcel
 import android.os.Parcelable
+import unsigned.toUByte
 
 /**
  * Created by brian.ledbetter on 1/28/18.
@@ -34,19 +35,19 @@ class EcuIO {
         }
     }
 
-    fun getEcuInfo(io : ElmIO) : EcuInfo {
+    fun getEcuInfo(io : UDSIO) : EcuInfo {
         var softwareVersion = ""
         var softwareNumber = ""
         var vinNumber = ""
 
-        io.writeBytesBlocking("22 F1 88", {bytes ->
-            softwareNumber = String(bytes!!.drop(3).toByteArray())
+        io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0x88.toUByte()), { bytes ->
+            softwareNumber = String(bytes!!)
         })
-        io.writeBytesBlocking("22 F1 89", {bytes ->
-            softwareVersion = String(bytes!!.drop(3).toByteArray())
+        io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0x89.toUByte()), { bytes ->
+            softwareVersion = String(bytes!!)
         })
-        io.writeBytesBlocking("22 F1 90", {bytes ->
-            vinNumber = String(bytes!!.drop(3).toByteArray())
+        io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0x90.toUByte()), { bytes ->
+            vinNumber = String(bytes!!)
         })
         return EcuInfo(softwareNumber, softwareVersion, vinNumber)
     }

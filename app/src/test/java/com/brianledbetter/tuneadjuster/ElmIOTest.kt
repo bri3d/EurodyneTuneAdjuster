@@ -3,7 +3,7 @@ package com.brianledbetter.tuneadjuster
 import com.brianledbetter.tuneadjuster.elm327.ElmIO
 import org.junit.Assert
 import org.junit.Test
-import java.io.OutputStream
+import unsigned.toUByte
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 
@@ -11,15 +11,6 @@ import java.io.PipedOutputStream
  * Created by brian.ledbetter on 1/29/18.
  */
 class ElmIOTest {
-    class FixtureOutputStream : OutputStream() {
-        private val fixtureArray = mutableListOf<Byte>()
-        var writeCallback : ((Int) -> Unit)? = null
-        override fun write(b: Int) {
-            fixtureArray.add(b.toByte())
-            writeCallback?.invoke(b)
-        }
-    }
-
     @Test
     fun writeBlockingTest() {
         val testInStream = PipedInputStream()
@@ -34,13 +25,10 @@ class ElmIOTest {
             elmIO.start()
         }
         elmThread.start()
-        val readThread = Thread {
-            elmIO.writeBytesBlocking("01 02", { bytes ->
-                testBytes = bytes!!
-            })
-        }
-        readThread.start()
-        readThread.join()
+        elmIO.writeBytesBlocking(byteArrayOf(0x22, 0xF1.toUByte(), 0x90.toUByte()), { bytes ->
+            testBytes = bytes!!
+        })
+        Assert.assertTrue(String(testOutStream.fixtureArrayAsBytes()).contains("22 F1 90"))
         Assert.assertEquals(0.toByte(), testBytes[0])
         Assert.assertEquals(1.toByte(), testBytes[1])
         Assert.assertEquals(2.toByte(), testBytes[2])

@@ -3,6 +3,7 @@ package com.brianledbetter.tuneadjuster.elm327
 import android.os.Parcel
 import android.os.Parcelable
 import unsigned.Ubyte
+import unsigned.toUByte
 import unsigned.toUInt
 import unsigned.toUbyte
 
@@ -64,47 +65,47 @@ class EurodyneIO {
         }
     }
 
-    fun getOctaneInfo(io : ElmIO) : OctaneInfo {
+    fun getOctaneInfo(io : UDSIO) : OctaneInfo {
         var minOctane = 0
         var maxOctane = 0
         var currentOctane = 0
-        io.writeBytesBlocking("22 FD 32", {bytes ->
-            minOctane = bytes!![3].toUInt()
+        io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x32.toUByte()), { returnBytes ->
+            minOctane = returnBytes?.get(0)?.toUInt() ?: 0
         })
-        io.writeBytesBlocking("22 FD 33", {bytes ->
-            maxOctane = bytes!![3].toUInt()
+        io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x33.toUByte()), { returnBytes ->
+            maxOctane = returnBytes?.get(0)?.toUInt() ?: 0
         })
-        io.writeBytesBlocking("22 F1 F9", {bytes ->
-            currentOctane = bytes!![3].toUInt()
+        io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF9.toUByte()), { returnBytes ->
+            currentOctane = returnBytes?.get(0)?.toUInt() ?: 0
         })
         return OctaneInfo(minOctane, maxOctane, currentOctane)
     }
 
-    fun getBoostInfo(io : ElmIO) : BoostInfo {
+    fun getBoostInfo(io : UDSIO) : BoostInfo {
         var minBoost = 0
         var maxBoost = 0
         var currentBoost = 0
-        io.writeBytesBlocking("22 FD 30", {bytes ->
-            minBoost = calculateBoost(bytes!![3].toUbyte())
+
+        io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x30.toUByte()), { returnBytes ->
+            minBoost = calculateBoost(returnBytes?.get(0)?.toUbyte() ?: 0.toUbyte())
         })
-        io.writeBytesBlocking("22 FD 31", {bytes ->
-            maxBoost = calculateBoost(bytes!![3].toUbyte())
+        io.readLocalIdentifier(byteArrayOf(0xFD.toUByte(), 0x31.toUByte()), { returnBytes ->
+            maxBoost = calculateBoost(returnBytes?.get(0)?.toUbyte() ?: 0.toUbyte())
         })
-        io.writeBytesBlocking("22 F1 F8", {bytes ->
-            currentBoost = calculateBoost(bytes!![3].toUbyte())
+        io.readLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF8.toUByte()), { returnBytes ->
+            currentBoost = calculateBoost(returnBytes?.get(0)?.toUbyte() ?: 0.toUbyte())
         })
+
         return BoostInfo(minBoost, maxBoost, currentBoost)
     }
 
-    fun setBoostInfo(io : ElmIO, boost : Int) {
+    fun setBoostInfo(io : UDSIO, boost : Int) {
         val writeBoostByte = calculateWriteBoost(boost)
-        val boostByteString = String.format("%02x", writeBoostByte.toByte())
-        io.writeBytesBlocking("2E F1 F8 " + boostByteString, {_ ->})
+        io.writeLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF8.toUByte()), byteArrayOf(writeBoostByte.toByte()), { _ -> })
     }
 
-    fun setOctaneInfo(io : ElmIO, octane : Int) {
-        val octaneByteString = String.format("%02x", octane.toUbyte().toByte())
-        io.writeBytesBlocking("2E F1 F9 " + octaneByteString, {_ ->})
+    fun setOctaneInfo(io : UDSIO, octane : Int) {
+        io.writeLocalIdentifier(byteArrayOf(0xF1.toUByte(), 0xF9.toUByte()), byteArrayOf(octane.toUByte()), { _ -> })
 
     }
 

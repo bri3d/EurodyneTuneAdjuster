@@ -11,6 +11,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.*
+import java.util.concurrent.locks.LockSupport
 
 
 class BluetoothService: Service() {
@@ -93,7 +94,7 @@ class BluetoothService: Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        btThread?.interrupt()
+        LockSupport.unpark(btThread)
     }
 
     override fun onBind(intent: Intent?): IBinder {
