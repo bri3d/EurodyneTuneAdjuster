@@ -11,6 +11,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.*
+import android.support.v4.app.NotificationCompat
 import java.util.concurrent.locks.LockSupport
 
 
@@ -82,7 +83,7 @@ class BluetoothService: Service() {
             channel.description = description
             notificationManager.createNotificationChannel(channel)
         }
-        val notification = Notification.Builder(this, channelId)
+        val notification = NotificationCompat.Builder(this, channelId)
                 .setContentTitle(getText(R.string.notification_title))
                 .setContentText(getText(R.string.notification_message))
                 .setSmallIcon(R.mipmap.app_icon)

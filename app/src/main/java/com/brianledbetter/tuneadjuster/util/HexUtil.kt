@@ -1,4 +1,4 @@
-package com.brianledbetter.tuneadjuster
+package com.brianledbetter.tuneadjuster.util
 
 object HexUtil {
     fun bytesToHexString(bytes: ByteArray): String {

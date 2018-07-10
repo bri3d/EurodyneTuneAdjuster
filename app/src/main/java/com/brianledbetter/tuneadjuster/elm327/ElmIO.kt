@@ -1,6 +1,6 @@
 package com.brianledbetter.tuneadjuster.elm327
 
-import com.brianledbetter.tuneadjuster.HexUtil
+import com.brianledbetter.tuneadjuster.util.HexUtil
 import java.io.*
 import java.nio.charset.Charset
 import java8.util.concurrent.CompletableFuture
