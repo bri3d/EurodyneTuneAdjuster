@@ -22,25 +22,36 @@ class BluetoothThread(mmDevice: BluetoothDevice, private val mainMessenger : Mes
 
     private val mmSocket: BluetoothSocket?
     private var elmIO : ElmIO? = null
-    val handler : Handler = Handler({ message ->
+    val handler : Handler = Handler { message ->
         val intent = message.obj as? Intent
         when(intent?.action) {
-            ServiceActions.Requests.SAVE_BOOST_AND_OCTANE -> {
+            ServiceActions.Requests.SAVE -> {
                 if (elmIO != null) {
                     val boost: EurodyneIO.BoostInfo = intent.getParcelableExtra("BoostInfo")
                     val octane: EurodyneIO.OctaneInfo = intent.getParcelableExtra("OctaneInfo")
                     val edIo = EurodyneIO(UDSIO(elmIO!!))
                     edIo.setBoostInfo(boost.current)
                     edIo.setOctaneInfo(octane.current)
+                    val hasE85 = intent.hasExtra("e85Info")
+                    if (hasE85) {
+                        val e85: EurodyneIO.E85Info = intent.getParcelableExtra("e85Info")
+                        edIo.setE85Info(e85.current)
+                    }
                     fetchTuneInfo()
+                    if (hasE85) {
+                        fetchE85()
+                    }
+
                 }
             }
             ServiceActions.Requests.FETCH_TUNE_DATA -> fetchTuneInfo()
             ServiceActions.Requests.FETCH_ECU_DATA -> fetchEcuInfo()
+            ServiceActions.Requests.FETCH_FEATURE_FLAGS -> fetchFeatureFlags()
+            ServiceActions.Requests.FETCH_E85 -> fetchE85()
             ServiceActions.Requests.STOP_CONNECTION -> cancel()
         }
         true
-    })
+    }
 
     init {
         var tmp: BluetoothSocket? = null
@@ -100,6 +111,16 @@ class BluetoothThread(mmDevice: BluetoothDevice, private val mainMessenger : Mes
         mainMessenger.send(message)
     }
 
+    private fun fetchFeatureFlags() {
+        val edIo = EurodyneIO(UDSIO(elmIO!!))
+        val enablementInfo = edIo.getFeatureFlags()
+        val message = Message()
+        val enabledIntent = Intent(ServiceActions.Responses.FEATURE_FLAGS)
+        enabledIntent.putExtra("featureFlags", enablementInfo)
+        message.obj = enabledIntent
+        mainMessenger.send(message)
+    }
+
     private fun fetchEcuInfo() {
         val ecuIO = EcuIO(UDSIO(elmIO!!))
         val ecuInfo = ecuIO.getEcuInfo()
@@ -107,6 +128,16 @@ class BluetoothThread(mmDevice: BluetoothDevice, private val mainMessenger : Mes
         val ecuIntent = Intent(ServiceActions.Responses.ECU_DATA)
         ecuIntent.putExtra("ecuInfo", ecuInfo)
         message.obj = ecuIntent
+        mainMessenger.send(message)
+    }
+
+    private fun fetchE85() {
+        val edIo = EurodyneIO(UDSIO(elmIO!!))
+        val e85Info = edIo.getE85Info()
+        val message = Message()
+        val eIntent = Intent(ServiceActions.Responses.E85_DATA)
+        eIntent.putExtra("e85Info", e85Info)
+        message.obj = eIntent
         mainMessenger.send(message)
     }
 

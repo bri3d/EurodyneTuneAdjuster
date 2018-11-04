@@ -42,16 +42,16 @@
         app:layout_constraintVertical_weight="1"
         tools:layout="@layout/fragment_adjust_field" />
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/save"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <FrameLayout
+        android:id="@+id/fieldThreeFragmentContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fieldTwoFragmentContainer"
-        app:layout_constraintVertical_weight="1.5" />
+        app:layout_constraintTop_toBottomOf="@+id/fieldOneFragmentContainer"
+        app:layout_constraintVertical_weight="1"
+        tools:layout="@layout/fragment_adjust_field" />
 
     <Switch
         android:id="@+id/connectionSwitch"
@@ -61,6 +61,17 @@
         android:saveEnabled="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fieldTwoFragmentContainer"
+        app:layout_constraintVertical_weight="1.5" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/save"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/fieldTwoFragmentContainer"
         app:layout_constraintVertical_weight="1.5" />
 
