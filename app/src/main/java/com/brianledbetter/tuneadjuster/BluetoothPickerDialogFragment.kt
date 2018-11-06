@@ -46,17 +46,17 @@ class BluetoothPickerDialogFragment : DialogFragment() {
         }
         mSelectedDevice = (mPossibleDevices[0] as BluetoothDevice).address
         builder.setTitle(R.string.pick_bluetooth)
-                .setSingleChoiceItems(bluetoothDevices, 0,
-                        { _, which -> mSelectedDevice = (mPossibleDevices[which])?.address })
+                .setSingleChoiceItems(bluetoothDevices, 0
+                ) { _, which -> mSelectedDevice = (mPossibleDevices[which])?.address }
                 // Set the action buttons
-                .setPositiveButton(R.string.ok, { _, _ ->
+                .setPositiveButton(R.string.ok) { _, _ ->
                     mListener?.onDialogPositiveClick(this@BluetoothPickerDialogFragment, mSelectedDevice.toString())
                     dismiss()
-                })
-                .setNegativeButton(R.string.cancel, { _, _ ->
+                }
+                .setNegativeButton(R.string.cancel) { _, _ ->
                     mListener?.onDialogNegativeClick(this@BluetoothPickerDialogFragment)
                     dismiss()
-                })
+                }
         return builder.create()
     }
 

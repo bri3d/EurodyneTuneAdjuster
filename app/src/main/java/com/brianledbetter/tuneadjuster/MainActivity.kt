@@ -26,10 +26,10 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
     private var octaneEnabled = false
     private var e85Enabled = false
 
-    private var serviceReceiveMessenger = Messenger(Handler({ message ->
-       handleMessage(message)
+    private var serviceReceiveMessenger = Messenger(Handler { message ->
+        handleMessage(message)
         true
-    }))
+    })
 
     private var serviceMessenger : Messenger? = null
 
@@ -61,17 +61,17 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
 
         isActive = savedInstanceState?.getBoolean("Active") ?: false
 
-        connectionSwitch.setOnCheckedChangeListener({ _: CompoundButton, isChecked: Boolean ->
+        connectionSwitch.setOnCheckedChangeListener { _: CompoundButton, isChecked: Boolean ->
             if (isChecked && !isActive) {
                 startConnection()
             } else if (!isChecked) {
                 stopConnection()
             }
-        })
+        }
 
-        button.setOnClickListener({_ ->
+        button.setOnClickListener { _ ->
             saveBoostAndOctane()
-        } )
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle?, outPersistentState: PersistableBundle?) {

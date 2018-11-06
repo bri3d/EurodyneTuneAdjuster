@@ -187,7 +187,6 @@ class EurodyneIO(private val io : UDSIO) {
     }
 
     private fun calculateE85(e85 : Ubyte) : Int {
-        val num = (e85.toDouble() / 1.28).toInt() + 1
-        return num
+        return (e85.toDouble() / 1.28).toInt() + 1
     }
 }

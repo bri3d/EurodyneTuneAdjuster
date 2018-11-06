@@ -34,10 +34,6 @@ class EcuIO(private val udsIo : UDSIO) {
         }
     }
 
-    fun returnToString(bytes : ByteArray?) : String {
-        return String(bytes!!)
-    }
-
     fun getEcuInfo() : EcuInfo {
         val softwareNumber = udsIo.readLocalIdentifier(0xF1, 0x88).thenApply(::returnToString).join()
         val softwareVersion = udsIo.readLocalIdentifier(0xF1, 0x89).thenApply(::returnToString).join()
@@ -46,4 +42,7 @@ class EcuIO(private val udsIo : UDSIO) {
         return EcuInfo(softwareNumber, softwareVersion, vinNumber)
     }
 
+    private fun returnToString(bytes : ByteArray?) : String {
+        return String(bytes!!)
+    }
 }
