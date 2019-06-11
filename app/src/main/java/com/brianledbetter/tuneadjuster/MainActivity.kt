@@ -1,7 +1,6 @@
 package com.brianledbetter.tuneadjuster
 
-import android.app.DialogFragment
-import android.support.v7.app.AppCompatActivity
+import androidx.fragment.app.DialogFragment
 import kotlinx.android.synthetic.main.activity_main.*
 import android.widget.Toast
 import android.bluetooth.BluetoothAdapter
@@ -11,14 +10,11 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.*
 import android.widget.CompoundButton
+import androidx.fragment.app.FragmentActivity
 import com.brianledbetter.tuneadjuster.elm327.EcuIO
 import com.brianledbetter.tuneadjuster.elm327.EurodyneIO
 
-class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjustedListener, BluetoothPickerDialogFragment.BluetoothDialogListener {
-    private var fieldOneFragment: AdjustFieldFragment? = null
-    private var fieldTwoFragment: AdjustFieldFragment? = null
-    private var fieldThreeFragment: AdjustFieldFragment? = null
-
+class MainActivity : FragmentActivity(), AdjustFieldFragment.OnParameterAdjustedListener, BluetoothPickerDialogFragment.BluetoothDialogListener {
     private var boostValue = 0
     private var octaneValue = 0
     private var e85Value = 0
@@ -101,7 +97,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
         if (devices.isNotEmpty()) {
             val bpdf = BluetoothPickerDialogFragment()
             bpdf.mPossibleDevices = devices
-            bpdf.show(fragmentManager, "BluetoothPickerDialogFragment")
+            bpdf.show(supportFragmentManager, "BluetoothPickerDialogFragment")
         } else {
             Toast.makeText(applicationContext, "ERROR! " + "No Bluetooth Device available!", Toast.LENGTH_LONG).show()
         }
@@ -137,6 +133,7 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
                 statusLabel.text = resources.getString(R.string.connecting)
             }
             ServiceActions.Responses.CONNECTED -> {
+                statusLabel.text = resources.getString(R.string.connected)
                 serviceMessenger?.send(messageWithIntent(Intent(ServiceActions.Requests.FETCH_ECU_DATA)))
 
             }
@@ -158,16 +155,17 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
                 serviceMessenger?.send(messageWithIntent(Intent(ServiceActions.Requests.FETCH_TUNE_DATA)))
             }
             ServiceActions.Responses.TUNE_DATA -> {
+                statusLabel.text = resources.getString(R.string.got_data)
                 val octaneData = intent.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")
                 val boostData = intent.getParcelableExtra<EurodyneIO.BoostInfo>("boostInfo")
                 val fragmentTransaction = supportFragmentManager.beginTransaction()
                 if (octaneEnabled && octaneData != null) {
-                    fieldOneFragment = AdjustFieldFragment.newInstance(octaneData.minimum, octaneData.maximum, octaneData.current, "Octane")
-                    fragmentTransaction.replace(R.id.fieldOneFragmentContainer, fieldOneFragment, "fieldOne")
+                    val newFragment = AdjustFieldFragment.newInstance(octaneData.minimum, octaneData.maximum, octaneData.current, "Octane")
+                    fragmentTransaction.replace(R.id.fieldOneFragmentContainer, newFragment, "fieldOne")
                 }
                 if (boostEnabled && boostData != null) {
-                    fieldTwoFragment = AdjustFieldFragment.newInstance(boostData.minimum, boostData.maximum, boostData.current, "Boost")
-                    fragmentTransaction.replace(R.id.fieldTwoFragmentContainer, fieldTwoFragment, "fieldTwo")
+                    val newFragment = AdjustFieldFragment.newInstance(boostData.minimum, boostData.maximum, boostData.current, "Boost")
+                    fragmentTransaction.replace(R.id.fieldTwoFragmentContainer, newFragment, "fieldTwo")
                 }
                 fragmentTransaction.commit()
                 if (e85Enabled) {
@@ -178,8 +176,8 @@ class MainActivity : AppCompatActivity(), AdjustFieldFragment.OnParameterAdjuste
                 val e85Data = intent.getParcelableExtra<EurodyneIO.E85Info>("e85Info")
                 val fragmentTransaction = supportFragmentManager.beginTransaction()
                 if (e85Enabled && e85Data != null) {
-                    fieldThreeFragment = AdjustFieldFragment.newInstance(0, 100, e85Data.current, "Alternative Fuel Content")
-                    fragmentTransaction.replace(R.id.fieldThreeFragmentContainer, fieldThreeFragment, "fieldThree")
+                    val newFragment =  AdjustFieldFragment.newInstance(0, 100, e85Data.current, "Alternative Fuel Content")
+                    fragmentTransaction.replace(R.id.fieldThreeFragmentContainer, newFragment, "fieldThree")
                 }
                 fragmentTransaction.commit()
             }

@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice
 import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Handler
+import android.os.Looper
 import android.os.Message
 import android.os.Messenger
 import android.util.Log
@@ -22,36 +23,7 @@ class BluetoothThread(mmDevice: BluetoothDevice, private val mainMessenger : Mes
 
     private val mmSocket: BluetoothSocket?
     private var elmIO : ElmIO? = null
-    val handler : Handler = Handler { message ->
-        val intent = message.obj as? Intent
-        when(intent?.action) {
-            ServiceActions.Requests.SAVE -> {
-                if (elmIO != null) {
-                    val boost: EurodyneIO.BoostInfo = intent.getParcelableExtra("BoostInfo")
-                    val octane: EurodyneIO.OctaneInfo = intent.getParcelableExtra("OctaneInfo")
-                    val edIo = EurodyneIO(UDSIO(elmIO!!))
-                    edIo.setBoostInfo(boost.current)
-                    edIo.setOctaneInfo(octane.current)
-                    val hasE85 = intent.hasExtra("e85Info")
-                    if (hasE85) {
-                        val e85: EurodyneIO.E85Info = intent.getParcelableExtra("e85Info")
-                        edIo.setE85Info(e85.current)
-                    }
-                    fetchTuneInfo()
-                    if (hasE85) {
-                        fetchE85()
-                    }
-
-                }
-            }
-            ServiceActions.Requests.FETCH_TUNE_DATA -> fetchTuneInfo()
-            ServiceActions.Requests.FETCH_ECU_DATA -> fetchEcuInfo()
-            ServiceActions.Requests.FETCH_FEATURE_FLAGS -> fetchFeatureFlags()
-            ServiceActions.Requests.FETCH_E85 -> fetchE85()
-            ServiceActions.Requests.STOP_CONNECTION -> cancel()
-        }
-        true
-    }
+    var handler : Handler? = null
 
     init {
         var tmp: BluetoothSocket? = null
@@ -66,12 +38,44 @@ class BluetoothThread(mmDevice: BluetoothDevice, private val mainMessenger : Mes
     }
 
     override fun run() {
+        Looper.prepare()
+        handler = Handler { message ->
+            val intent = message.obj as? Intent
+            when(intent?.action) {
+                ServiceActions.Requests.SAVE -> {
+                    if (elmIO != null) {
+                        val boost: EurodyneIO.BoostInfo = intent.getParcelableExtra("BoostInfo")
+                        val octane: EurodyneIO.OctaneInfo = intent.getParcelableExtra("OctaneInfo")
+                        val edIo = EurodyneIO(UDSIO(elmIO!!))
+                        edIo.setBoostInfo(boost.current)
+                        edIo.setOctaneInfo(octane.current)
+                        val hasE85 = intent.hasExtra("e85Info")
+                        if (hasE85) {
+                            val e85: EurodyneIO.E85Info = intent.getParcelableExtra("e85Info")
+                            edIo.setE85Info(e85.current)
+                        }
+                        fetchTuneInfo()
+                        if (hasE85) {
+                            fetchE85()
+                        }
+
+                    }
+                }
+                ServiceActions.Requests.FETCH_TUNE_DATA -> fetchTuneInfo()
+                ServiceActions.Requests.FETCH_ECU_DATA -> fetchEcuInfo()
+                ServiceActions.Requests.FETCH_FEATURE_FLAGS -> fetchFeatureFlags()
+                ServiceActions.Requests.FETCH_E85 -> fetchE85()
+                ServiceActions.Requests.STOP_CONNECTION -> cancel()
+            }
+            true
+        }
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         bluetoothAdapter.cancelDiscovery()
         try {
             mmSocket!!.connect()
         } catch (connectException: IOException) {
             try {
+                Log.e(TAG, "Bluetooth connection could not be opened!", connectException)
                 cancel()
             } catch (closeException: IOException) {
                 Log.e(TAG, "Could not close the client socket", closeException)
@@ -88,14 +92,13 @@ class BluetoothThread(mmDevice: BluetoothDevice, private val mainMessenger : Mes
         val connectedMessage = Message()
         connectedMessage.obj = Intent(ServiceActions.Responses.CONNECTED)
         mainMessenger.send(connectedMessage)
-        LockSupport.park()
-        cancel()
+        Looper.loop()
     }
 
     private fun sendClosed() {
-        val closeMessage = handler.obtainMessage()
+        val closeMessage = handler?.obtainMessage()
         val intent = Intent(ServiceActions.Responses.SOCKET_CLOSED)
-        closeMessage.obj = intent
+        closeMessage?.obj = intent
         mainMessenger.send(closeMessage)
     }
 
@@ -143,6 +146,7 @@ class BluetoothThread(mmDevice: BluetoothDevice, private val mainMessenger : Mes
 
     private fun cancel() {
         try {
+            Looper.myLooper()?.quitSafely()
             elmIO?.stop()
             mmSocket!!.close()
             sendClosed()

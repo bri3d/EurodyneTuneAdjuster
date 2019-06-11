@@ -126,7 +126,7 @@ class EurodyneIO(private val io : UDSIO) {
     }
 
     fun getFeatureFlags() : FeatureFlagInfo {
-        val featureFlags = io.readLocalIdentifier(0xFD, 0xFB).thenApply(::getFirstUByteOrZero).join()
+        val featureFlags = io.readLocalIdentifier(0xF1, 0xFB).thenApply(::getFirstUByteOrZero).join()
         val boostEnabled = featureFlags and 2 > 0
         val octaneEnabled = featureFlags and 4 > 0
         val e85Enabled = featureFlags and 32 > 0
