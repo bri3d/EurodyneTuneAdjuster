@@ -56,6 +56,8 @@ class MainActivity : FragmentActivity(), AdjustFieldFragment.OnParameterAdjusted
                 Context.BIND_AUTO_CREATE)
 
         isActive = savedInstanceState?.getBoolean("Active") ?: false
+        button.isEnabled = isActive
+        connectionSwitch.isChecked = isActive
 
         connectionSwitch.setOnCheckedChangeListener { _: CompoundButton, isChecked: Boolean ->
             if (isChecked && !isActive) {
@@ -65,8 +67,13 @@ class MainActivity : FragmentActivity(), AdjustFieldFragment.OnParameterAdjusted
             }
         }
 
-        button.setOnClickListener { _ ->
+        button.setOnClickListener {
             saveBoostAndOctane()
+        }
+
+        exitSwitch.setOnClickListener {
+            stopBluetoothThread()
+            finish()
         }
     }
 
@@ -125,6 +132,7 @@ class MainActivity : FragmentActivity(), AdjustFieldFragment.OnParameterAdjusted
             ServiceActions.Responses.SOCKET_CLOSED, ServiceActions.Responses.CONNECTION_NOT_ACTIVE -> {
                 statusLabel.text = resources.getString(R.string.not_connected)
                 isActive = false
+                button.isEnabled = false
                 connectionSwitch.isChecked = false
             }
             ServiceActions.Responses.CONNECTION_ACTIVE -> {
@@ -155,6 +163,7 @@ class MainActivity : FragmentActivity(), AdjustFieldFragment.OnParameterAdjusted
                 serviceMessenger?.send(messageWithIntent(Intent(ServiceActions.Requests.FETCH_TUNE_DATA)))
             }
             ServiceActions.Responses.TUNE_DATA -> {
+                button.isEnabled = true
                 statusLabel.text = resources.getString(R.string.got_data)
                 val octaneData = intent.getParcelableExtra<EurodyneIO.OctaneInfo>("octaneInfo")
                 val boostData = intent.getParcelableExtra<EurodyneIO.BoostInfo>("boostInfo")
@@ -208,6 +217,10 @@ class MainActivity : FragmentActivity(), AdjustFieldFragment.OnParameterAdjusted
 
     override fun onBackPressed() {
         super.onBackPressed()
+        stopBluetoothThread()
+    }
+
+    private fun stopBluetoothThread() {
         val serviceIntent = Intent(this, BluetoothService::class.java)
         stopService(serviceIntent)
     }
